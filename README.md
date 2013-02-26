@@ -1,14 +1,13 @@
-SketchFab-Uploader-Plugin-for-SketchUp
+SketchFab Uploader Plugin for SketchUp
 ======================================
 
-+=begin
-+Copyright 2012, Alexander C. Schreyer
-+All Rights Reserved
-+
-+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, 
-+INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND 
-+FITNESS FOR A PARTICULAR PURPOSE.
-+
+Copyright 2012, Alexander C. Schreyer
+All Rights Reserved
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, 
+INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND 
+FITNESS FOR A PARTICULAR PURPOSE.
+
 +License:        GPL (http://www.gnu.org/licenses/gpl.html)
 +
 +Author :        Alexander Schreyer, www.alexschreyer.net, mail@alexschreyer.net

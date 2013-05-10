@@ -12,8 +12,8 @@ Author :        Alexander Schreyer, www.alexschreyer.net, mail@alexschreyer.net
 Website:        http://www.alexschreyer.net/projects/
 
 Name :          Sketchfab Uploader
-Version:        1.4
-Date :          12/11/2012
+Version:        1.5
+Date :          5/10/2013
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -35,6 +35,8 @@ History:        1.0 (7/13/2012):
                 - Exports edges by default now
                 - Removed thumbnail upload (not supported anymore by API)
                 - Better string cleaning on upload
+                1.5 (5/10/2013):
+                - Reorganized folders
 
 Issues:
                 - The post_url function does not accept returned data.

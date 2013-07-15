@@ -12,8 +12,8 @@ Author :        Alexander Schreyer, www.alexschreyer.net, mail@alexschreyer.net
 Website:        http://www.alexschreyer.net/projects/
 
 Name :          Sketchfab Uploader
-Version:        1.5
-Date :          5/10/2013
+Version:        1.6
+Date :          7/15/2013
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -37,6 +37,8 @@ History:        1.0 (7/13/2012):
                 - Better string cleaning on upload
                 1.5 (5/10/2013):
                 - Reorganized folders
+                1.6 (7/15/2013):
+                - Changed temp location to user folder to remove permission problem
 
 Issues:
                 - The post_url function does not accept returned data.
@@ -53,9 +55,13 @@ module AS_SketchfabUploader
         mod = Sketchup.active_model 
 
         # Set temporary filenames
-        # Don't use root folders because of writing permissions
-        filename = File.join(File.dirname(__FILE__) , 'temp_export.kmz')
-        i_filename = File.join(File.dirname(__FILE__) , 'temp_export.png')
+        # Don't use root or plugin folders because of writing permissions
+        # Get user directory for temporary file storage
+        @user_dir = (ENV['USERPROFILE'] != nil) ? ENV['USERPROFILE'] :
+                    ( (ENV['HOME'] != nil) ? ENV['HOME'] : 
+                    File.dirname(__FILE__) )
+        filename = File.join(@user_dir , 'temp_export.kmz')
+        i_filename = File.join(@user_dir , 'temp_export.png')
 
         # Exporter options
         options_hash = {  :triangulated_faces   => true,
@@ -88,9 +94,9 @@ module AS_SketchfabUploader
             i_contents = open(i_filename, "rb") {|io| io.read }
             i_encdata = [i_contents].pack('m')
             
-            # Then delete the temporary files - keep them for debugging
-            # File.delete filename
-            # File.delete i_filename
+            # Then delete the temporary files
+            File.delete filename
+            File.delete i_filename
             
             # Set up and show Webdialog
             dlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)

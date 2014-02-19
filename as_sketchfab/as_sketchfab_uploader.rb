@@ -101,11 +101,13 @@ module AS_SketchfabUploader
                 File.dirname(__FILE__) )
     # Cleanup slashes
     @user_dir = @user_dir.tr("\\","/")
-    @filename = File.join(@user_dir , 'temp_export.kmz')
+    @filename = File.join(@user_dir , 'temp_export.dae')
+    @asset_dir = File.join(@user_dir, 'temp_export')
+    @zip_name = File.join(@user_dir,'temp_export.zip')
     
     # Exporter options - doesn't work with KMZ export, though
     @options_hash = {  :triangulated_faces   => true,
-                      :doublesided_faces    => true,
+                      :doublesided_faces    => false,
                       :edges                => true,
                       :materials_by_layer   => false,
                       :author_attribution   => true,
@@ -116,6 +118,12 @@ module AS_SketchfabUploader
     
     # ========================    
    
+    # clean old files if any
+    $: << File.dirname(__FILE__)+'/lib'
+    require 'fileutils'
+    FileUtils.rm(@filename) if File.exists?(@filename)
+    FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)
+    FileUtils.rm(@zip_name) if File.exists?(@zip_name)
 
     def self.show_dialog_2013
     # This uses a json approach to upload (for < SU 2014)
@@ -123,12 +131,16 @@ module AS_SketchfabUploader
         # Export model as KMZ
         if Sketchup.active_model.export @filename, @options_hash then
             
+            
+            require 'zip'
+            Zip.create(@zip_name, @filename, @asset_dir)
+            
             # Open file as binary and encode it as Base64
-            contents = open(@filename, "rb") {|io| io.read }
+            contents = open(@zip_name, "rb") {|io| io.read }
             encdata = [contents].pack('m')
             
             # Then delete the temporary files
-            # File.delete @filename
+            # File.delete @zip_name
             
             # Set up and show Webdialog
             dlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
@@ -277,7 +289,6 @@ module AS_SketchfabUploader
 
 
         # Load Net and multipart post libraries
-        $: << File.dirname(__FILE__)+'/lib'
         require 'net/http'
         require 'json'
         require 'net/http/post/multipart'

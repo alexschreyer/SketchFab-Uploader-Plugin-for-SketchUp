@@ -167,7 +167,7 @@ module AS_SketchfabUploader
                 end
                 
                 # Assemble JSON string
-                json = '{"contents":"' + encdata.split(/[\r\n]+/).join('\r\n') + '","filename":"temp.zip","title":"' + mytitle + '","description":"' + description + '","tags":"' + tags + '","token":"' + p + '","source":"sketchup-version"' + privString + '}'
+                json = '{"contents":"' + encdata.split(/[\r\n]+/).join('\r\n') + '","filename":"temp.zip","title":"' + mytitle + '","description":"' + description + '","tags":"' + tags + '","token":"' + p + '","source":"sketchup-exporter"' + privString + '}'
                 
                 # Submit data to Sketchfab - need to use old API with JSON
                 d.post_url("https://api.sketchfab.com/model", json)
@@ -327,7 +327,7 @@ module AS_SketchfabUploader
             if Sketchup.active_model.export @filename, @options_hash then
                 
                 # Some feedback while we wait
-                d.execute_script("submitted()")               
+                d.execute_script('submitted()')               
                 
                 # Open file for multipart upload
                 encdata = UploadIO.new(File.new(@filename), "application/zip", "model.kmz")
@@ -347,7 +347,7 @@ module AS_SketchfabUploader
                           'tags' => tags,
                           'private' => private,
                           'password' => password,
-                          'source' => 'sketchup-version'
+                          'source' => 'sketchup-exporter'
                 
                 # And submit it
                 res = Net::HTTP.start(url.host, url.port) do |http|
@@ -455,9 +455,9 @@ module AS_SketchfabUploader
         
         function submitted() {
             $('h1').html('Processing...');
-            scomment = "Your model has been submitted. Please hang on while we wait for a response from Sketchfab.";
+            scomment = 'Your model has been submitted. Please hang on while we wait for a response from Sketchfab.';
             $('#text').html(scomment);
-            $('form').html('');                  
+            $('form').html('');
         };        
         
         </script>

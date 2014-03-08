@@ -1,6 +1,7 @@
 module Zip
 
-	USING_WINDOWS = (RUBY_PLATFORM =~/mswin/)
+    # Have to check for old and newer Windows name
+	USING_WINDOWS = ( RUBY_PLATFORM =~/mswin/ or RUBY_PLATFORM =~/mingw/ )
 	if USING_WINDOWS
 		SevenZip = File.join(File.dirname(__FILE__), '..', 'bin', '7za.exe')
 	end

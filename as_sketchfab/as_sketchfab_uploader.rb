@@ -13,8 +13,8 @@ Author :        Alexander Schreyer, www.alexschreyer.net, mail@alexschreyer.net
 Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/
 
 Name :          Sketchfab Uploader
-Version:        1.7
-Date :          2/18/2014
+Version:        1.8
+Date :          TBD
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -47,35 +47,79 @@ History:        1.0 (7/13/2012):
                 - Added new upload method
                 - Implemented multipart upload via new API
                 - Added option to open model after uploading
+                1.8:
+                - Uploads ZIPped models now
+                - Gives option to only upload selection if something has been selected.
+                - SketchUp material names are now preserved on upload.
+
 
 Issues:
                 - For versions before SU 2014: the post_url function does not accept returned data.
-                
+
+
+Credits:
+
+  Clément (zqsd) for the DAE ZIP solution.
+
+
 Licenses:
 
-multipart-post
-==============
-
-https://github.com/nicksieger/multipart-post
-
-Copyright (c) 2007-2013 Nick Sieger nick@nicksieger.com
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this 
-software and associated documentation files (the 'Software'), to deal in the Software without 
-restriction, including without limitation the rights to use, copy, modify, merge, publish, 
-distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom 
-the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, 
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS 
-OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN 
-AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
-THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+  multipart-post
+  ==============
+  
+    https://github.com/nicksieger/multipart-post
+    
+    Copyright (c) 2007-2013 Nick Sieger nick@nicksieger.com
+    
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+    software and associated documentation files (the 'Software'), to deal in the Software without 
+    restriction, including without limitation the rights to use, copy, modify, merge, publish, 
+    distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom 
+    the Software is furnished to do so, subject to the following conditions:
+    
+    The above copyright notice and this permission notice shall be included 
+    in all copies or substantial portions of the Software.
+    
+    THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, 
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS 
+    OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN 
+    AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH 
+    THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  
+  
+  7-zip:
+  ======
+  
+    7-Zip Command line version
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    License for use and distribution
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    7-Zip Copyright (C) 1999-2010 Igor Pavlov.
+    
+    7za.exe is distributed under the GNU LGPL license
+    
+    Notes: 
+      You can use 7-Zip on any computer, including a computer in a commercial 
+      organization. You don't need to register or pay for 7-Zip.
+    
+    
+    GNU LGPL information
+    --------------------
+    
+      This library is free software; you can redistribute it and/or
+      modify it under the terms of the GNU Lesser General Public
+      License as published by the Free Software Foundation; either
+      version 2.1 of the License, or (at your option) any later version.
+    
+      This library is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+      Lesser General Public License for more details.
+    
+      You can receive a copy of the GNU Lesser General Public License from 
+      http://www.gnu.org/
 
 =end
 
@@ -106,40 +150,49 @@ module AS_SketchfabUploader
     @zip_name = File.join(@user_dir,'temp_export.zip')
     
     # Exporter options - doesn't work with KMZ export, though
-    @options_hash = {  :triangulated_faces   => true,
+    @options_hash = { :triangulated_faces   => true,
                       :doublesided_faces    => false,
                       :edges                => true,
                       :materials_by_layer   => false,
                       :author_attribution   => true,
                       :texture_maps         => true,
                       :selectionset_only    => false,
-                      :preserve_instancing  => true }    
-    
-    
-    # ========================    
+                      :preserve_instancing  => true }      
    
-    # clean old files if any
+    # Add the library path so Ruby can find it
     $: << File.dirname(__FILE__)+'/lib'
-    require 'fileutils'
-    FileUtils.rm(@filename) if File.exists?(@filename)
-    FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)
-    FileUtils.rm(@zip_name) if File.exists?(@zip_name)
+    
+    # Load libraries for 2013 and 2014
+    require 'zip'    
+
+
+    # ========================  
+    
 
     def self.show_dialog_2013
     # This uses a json approach to upload (for < SU 2014)
+    
+        # Need to load the old Fileutils here
+        require 'fileutils-186'
+    
+        # Allow for only selection upload if something is selected - reset var first
+        @options_hash[:selectionset_only] = false
+        if (Sketchup.active_model.selection.length > 0) then
+            res = UI.messagebox "Upload only selected geometry?", MB_YESNO
+            @options_hash[:selectionset_only] = true if (res == 6)
+        end     
         
-        # Export model as KMZ
+        # Export model as DAE
         if Sketchup.active_model.export @filename, @options_hash then
             
-            
-            require 'zip'
+            # Create ZIP file
             Zip.create(@zip_name, @filename, @asset_dir)
             
             # Open file as binary and encode it as Base64
             contents = open(@zip_name, "rb") {|io| io.read }
             encdata = [contents].pack('m')
             
-            # Then delete the temporary files
+            # Then delete the temporary files - keep for debugging
             # File.delete @zip_name
             
             # Set up and show Webdialog
@@ -179,10 +232,17 @@ module AS_SketchfabUploader
                 end
                 
                 # Assemble JSON string
-                json = '{"contents":"' + encdata.split(/[\r\n]+/).join('\r\n') + '","filename":"temp.zip","title":"' + mytitle + '","description":"' + description + '","tags":"' + tags + '","token":"' + p + '","source":"sketchup-exporter"' + privString + '}'
+                json = '{"contents":"' + encdata.split(/[\r\n]+/).join('\r\n') + '","filename":"model.zip","title":"' + mytitle + '","description":"' + description + '","tags":"' + tags + '","token":"' + p + '","source":"sketchup-exporter"' + privString + '}'
                 
                 # Submit data to Sketchfab - need to use old API with JSON
                 d.post_url("https://api.sketchfab.com/model", json)
+                
+                # Then delete the temporary files             
+                File.delete @zip_name if File.exists?(@zip_name) 
+                File.delete @filename if File.exists?(@filename) 
+                #  FileUtils.rm(@zip_name) if File.exists?(@zip_name)
+                #  FileUtils.rm(@filename) if File.exists?(@filename)
+                FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)                 
                 
                 defaults = Sketchup.write_default "Sketchfab", "api_token", p
                 d.execute_script('submitted()')
@@ -204,7 +264,7 @@ module AS_SketchfabUploader
             <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
             </head>
             <body>
-            <img src="~ + logo + %Q~" style="width:100%;" />
+            <img src="#{logo}" style="width:100%;" />
             <p id="text">This dialog uploads the currently open model to Sketchfab.com. All fields marked with a * are mandatory.
             You can get your API token from the <a href='http://sketchfab.com' title='http://sketchfab.com' target='_blank'>Sketchfab website</a> after registering there.</p>
             <form id="SketchfabSubmit" name="SketchfabSubmit" action="">
@@ -287,12 +347,19 @@ module AS_SketchfabUploader
     def self.show_dialog_2014
     # This uses the Ruby NET StdLibs instead of json
 
-
-        # Load Net and multipart post libraries
+        # Load Net and multipart post libraries for 2014
         require 'net/http'
         require 'json'
         require 'net/http/post/multipart'
+        # Can load the new Fileutils here
+        require 'fileutils'
         
+        # Allow for only selection upload if something is selected - reset var first
+        @options_hash[:selectionset_only] = false
+        if (Sketchup.active_model.selection.length > 0) then
+            res = UI.messagebox "Upload only selected geometry?", MB_YESNO
+            @options_hash[:selectionset_only] = true if (res == 6)
+        end             
 
         # Set up and show Webdialog
         dlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
@@ -336,16 +403,17 @@ module AS_SketchfabUploader
             
             # Export model as KMZ and process
             if Sketchup.active_model.export @filename, @options_hash then
+            
+                # Create ZIP file
+                Zip.create(@zip_name, @filename, @asset_dir)
                 
                 # Some feedback while we wait
                 d.execute_script('submitted()')               
                 
                 # Open file for multipart upload
-                encdata = UploadIO.new(File.new(@filename), "application/zip", "model.kmz")
+                upfile = File.new(@zip_name)
+                encdata = UploadIO.new(upfile, "application/zip", "model.zip")            
                 
-                # Then delete the temporary file
-                # File.delete @filename
-            
                 # Submission URL
                 url = URI.parse('http://api.sketchfab.com/v1/models')
                 
@@ -364,7 +432,7 @@ module AS_SketchfabUploader
                 res = Net::HTTP.start(url.host, url.port) do |http|
                   http.request(req)
                 end
-                json = JSON.parse(res.body.gsub(/"/,"\""))
+                json = JSON.parse(res.body.gsub(/"/,"\""))                 
                 
                 @success = json['success']
                 if @success then 
@@ -374,7 +442,7 @@ module AS_SketchfabUploader
                     
                     d.close
                     # Give option to open uploaded model
-                    result = UI.messagebox 'Open Sketchfab model in default browser?', MB_YESNO
+                    result = UI.messagebox 'Open Sketchfab model in your browser?', MB_YESNO
                     UI.openURL "https://sketchfab.com/show/#{@model_id}" if result == 6  
                     
                 else
@@ -383,6 +451,14 @@ module AS_SketchfabUploader
                     UI.messagebox "Sketchfab upload failed. Error: " + json['error']
                 
                 end
+                                
+                # Then delete the temporary files
+                upfile.close                
+                File.delete @zip_name if File.exists?(@zip_name) 
+                File.delete @filename if File.exists?(@filename) 
+                #  FileUtils.rm(@zip_name) if File.exists?(@zip_name)
+                #  FileUtils.rm(@filename) if File.exists?(@filename)
+                FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)                 
                 
                 # Save token for the next time
                 defaults = Sketchup.write_default "as_Sketchfab", "api_token", p                
@@ -413,7 +489,7 @@ module AS_SketchfabUploader
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
         </head>
         <body>
-        <img src="~ + logo + %Q~" style="width:100%;" />
+        <img src="#{logo}" style="width:100%;" />
         <p id="text">This dialog uploads the currently open model to Sketchfab.com. All fields marked with a * are mandatory.
         You can get your API token from the <a href='http://sketchfab.com' title='http://sketchfab.com' target='_blank'>Sketchfab website</a> after registering there.</p>
         <form id="SketchfabSubmit" name="SketchfabSubmit" action="">
@@ -484,22 +560,19 @@ module AS_SketchfabUploader
     # ========================    
     
     
-end # module
-
-
-# ========================
-
-
-# Create menu items
-unless file_loaded?(__FILE__)
-
-  # Pick based on version
-  if Sketchup.version.to_f < 14 then
-    UI.menu("File").add_item("Upload to Sketchfab") {AS_SketchfabUploader::show_dialog_2013} 
-  else
-    UI.menu("File").add_item("Upload to Sketchfab") {AS_SketchfabUploader::show_dialog_2014} 
-  end
-  
-  file_loaded(__FILE__)
+    # Create menu items
+    unless file_loaded?(__FILE__)
+    
+      # Pick based on version
+      if Sketchup.version.to_f < 14 then
+        UI.menu("File").add_item("Upload to Sketchfab") {AS_SketchfabUploader::show_dialog_2013} 
+      else
+        UI.menu("File").add_item("Upload to Sketchfab") {AS_SketchfabUploader::show_dialog_2014} 
+      end
+      
+      file_loaded(__FILE__)
  
-end
+    end    
+    
+    
+end # module

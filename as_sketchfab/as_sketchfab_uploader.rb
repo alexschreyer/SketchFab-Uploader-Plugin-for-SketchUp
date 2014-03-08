@@ -14,7 +14,7 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 
 Name :          Sketchfab Uploader
 Version:        1.8
-Date :          TBD
+Date :          3/8/2014
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -47,14 +47,16 @@ History:        1.0 (7/13/2012):
                 - Added new upload method
                 - Implemented multipart upload via new API
                 - Added option to open model after uploading
-                1.8:
+                1.8 (3/8/2014):
                 - Uploads ZIPped models now
                 - Gives option to only upload selection if something has been selected.
                 - SketchUp material names are now preserved on upload.
+                - SU 2014 only: Option to include/exclude edges
 
 
-Issues:
+Issues/To-do:
                 - For versions before SU 2014: the post_url function does not accept returned data.
+                - Text labels, dimensions, construction-points and -lines don't upload (by design)
 
 
 Credits:
@@ -192,9 +194,6 @@ module AS_SketchfabUploader
             contents = open(@zip_name, "rb") {|io| io.read }
             encdata = [contents].pack('m')
             
-            # Then delete the temporary files - keep for debugging
-            # File.delete @zip_name
-            
             # Set up and show Webdialog
             dlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
             dlg.navigation_buttons_enabled = false
@@ -309,7 +308,7 @@ module AS_SketchfabUploader
                     $(this).val('True');
                 };
                 $('#pw-field').toggle(); 
-            });
+            });          
             
             $(document).ready(function() {
                 window.location='skp:prefill';
@@ -400,6 +399,10 @@ module AS_SketchfabUploader
             tags.gsub!(/,*\s+/,' ')
             private = d.get_element_value("private").gsub(/"/, "'")
             password = d.get_element_value("password").gsub(/"/, "'")
+            edges = d.get_element_value("edges").gsub(/"/, "'")
+            
+            # Display edges in uploaded model?
+            (edges == "True") ? @options_hash[:edges] = true : @options_hash[:edges] = false
             
             # Export model as KMZ and process
             if Sketchup.active_model.export @filename, @options_hash then
@@ -499,6 +502,7 @@ module AS_SketchfabUploader
             <p><label for="private">Make model private?</label><input type="checkbox" name="private" id="private" value="" /> <span style="font-weight:normal;">(PRO account required)</span></p>
             <p id="pw-field" style="display:none;"><label for="password">Password</label><input type="text" name="password" id="password" value="" style="width:200px;" /></p>
             <p><label for="token">Your API token *</label><input type="text" name="token" id="token" value="" style="width:200px;" /></p>
+            <p><label for="options">Options:</label><input type="checkbox" name="edges" id="edges" checked="true" value="True" /> Include edges</p>
             <p><input type="submit" id="submit" value="Submit Model" style="font-weight:bold;" /></p>
         </form>
         <p><span style="float:left;"><button value="Cancel" id="cancel">Dismiss</button></span><span style="float:right;margin-top:10px;">&copy; 2012-2014 by <a href="http://www.alexschreyer.net/" title="http://www.alexschreyer.net/" target="_blank" style="color:orange">Alex Schreyer</a></span></p>
@@ -535,7 +539,15 @@ module AS_SketchfabUploader
             };
             $('#pw-field').toggle(); 
         });
-        
+
+        $('#edges').click(function(){
+            if ($(this).val() == 'True') {
+                $(this).val('');
+            } else {
+                $(this).val('True');
+            };
+        });
+
         $(document).ready(function() {
             window.location='skp:prefill';
         });

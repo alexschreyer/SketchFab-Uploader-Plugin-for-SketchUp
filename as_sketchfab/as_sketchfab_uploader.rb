@@ -13,8 +13,8 @@ Author :        Alexander Schreyer, www.alexschreyer.net, mail@alexschreyer.net
 Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/
 
 Name :          Sketchfab Uploader
-Version:        1.8
-Date :          3/8/2014
+Version:        2.0
+Date :          3/11/2014
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -52,11 +52,15 @@ History:        1.0 (7/13/2012):
                 - Gives option to only upload selection if something has been selected.
                 - SketchUp material names are now preserved on upload.
                 - SU 2014 only: Option to include/exclude edges
+                2.0 (3/11/2014):
+                - Added more export options to dialog (2014)
+                - Added error handling in uploading code (2014)
+                - Changed upload to SSL (2014), 2013 was always SSL
 
 
 Issues/To-do:
                 - For versions before SU 2014: the post_url function does not accept returned data.
-                - Text labels, dimensions, construction-points and -lines don't upload (by design)
+                - Text labels, dimensions, construction-points and -lines, images etc. don't upload (by design)
 
 
 Credits:
@@ -347,9 +351,12 @@ module AS_SketchfabUploader
     # This uses the Ruby NET StdLibs instead of json
 
         # Load Net and multipart post libraries for 2014
+        require 'uri'
         require 'net/http'
-        require 'json'
+        require 'net/https'
         require 'net/http/post/multipart'
+        require 'openssl'
+        require 'json'
         # Can load the new Fileutils here
         require 'fileutils'
         
@@ -399,64 +406,89 @@ module AS_SketchfabUploader
             tags.gsub!(/,*\s+/,' ')
             private = d.get_element_value("private").gsub(/"/, "'")
             password = d.get_element_value("password").gsub(/"/, "'")
-            edges = d.get_element_value("edges").gsub(/"/, "'")
+            edg = d.get_element_value("edges").gsub(/"/, "'")
+            mat = d.get_element_value("materials").gsub(/"/, "'")
+            tex = d.get_element_value("textures").gsub(/"/, "'")
+            fac = d.get_element_value("faces").gsub(/"/, "'")
+            ins = d.get_element_value("instances").gsub(/"/, "'")
             
-            # Display edges in uploaded model?
-            (edges == "True") ? @options_hash[:edges] = true : @options_hash[:edges] = false
+            # Adjust options from dialog
+            (edg == "True") ? @options_hash[:edges] = true : @options_hash[:edges] = false
+            (mat == "True") ? @options_hash[:materials_by_layer] = true : @options_hash[:materials_by_layer] = false
+            (tex == "True") ? @options_hash[:texture_maps] = true : @options_hash[:texture_maps] = false
+            (fac == "True") ? @options_hash[:doublesided_faces] = true : @options_hash[:doublesided_faces] = false
+            (ins == "True") ? @options_hash[:preserve_instancing] = true : @options_hash[:preserve_instancing] = false
             
             # Export model as KMZ and process
             if Sketchup.active_model.export @filename, @options_hash then
             
-                # Create ZIP file
-                Zip.create(@zip_name, @filename, @asset_dir)
-                
                 # Some feedback while we wait
-                d.execute_script('submitted()')               
+                d.execute_script('submitted()')  
+            
+                # Wrap in rescue for error display
+                begin
                 
-                # Open file for multipart upload
-                upfile = File.new(@zip_name)
-                encdata = UploadIO.new(upfile, "application/zip", "model.zip")            
+                    # Create ZIP file
+                    Zip.create(@zip_name, @filename, @asset_dir)             
+                    
+                    # Open file for multipart upload
+                    upfile = File.new(@zip_name)
+                    encdata = UploadIO.new(upfile, "application/zip", "model.zip")            
+                                    
+                    # Compile data
+                    data = {
+                              'token' => p,
+                              'fileModel' => encdata,
+                              'title' => mytitle,
+                              'description' => description,
+                              'tags' => tags,
+                              'private' => private,
+                              'password' => password,
+                              'source' => 'sketchup-exporter'
+                    }
+                    
+                    # Submission URL
+                    uri = URI.parse('https://api.sketchfab.com/v1/models')
+                    
+                    # Prepare data for submission
+                    req = Net::HTTP::Post::Multipart.new uri.path, data                                
                 
-                # Submission URL
-                url = URI.parse('http://api.sketchfab.com/v1/models')
+                    # Submit via SSL
+                    https = Net::HTTP.new(uri.host, uri.port)
+                    https.use_ssl = true
+                    https.verify_mode = OpenSSL::SSL::VERIFY_NONE
+                    res = https.start { |cnt| cnt.request(req) }
+                    
+                    # Now extract the resulting data
+                    json = JSON.parse(res.body.gsub(/"/,"\""))                 
+                    @success = json['success']   
+                    
+                    upfile.close 
+                    
+                rescue Exception => e
                 
-                # Prepare data for submission
-                req = Net::HTTP::Post::Multipart.new url.path,
-                          'token' => p,
-                          'fileModel' => encdata,
-                          'title' => mytitle,
-                          'description' => description,
-                          'tags' => tags,
-                          'private' => private,
-                          'password' => password,
-                          'source' => 'sketchup-exporter'
+                    UI.messagebox e
+                    
+                end  
                 
-                # And submit it
-                res = Net::HTTP.start(url.host, url.port) do |http|
-                  http.request(req)
-                end
-                json = JSON.parse(res.body.gsub(/"/,"\""))                 
-                
-                @success = json['success']
+                d.close                
+  
                 if @success then 
                 
                     # Get model info from result
-                    @model_id = json['result']['id']
+                    @model_id = json['result']['id']                    
                     
-                    d.close
                     # Give option to open uploaded model
                     result = UI.messagebox 'Open Sketchfab model in your browser?', MB_YESNO
                     UI.openURL "https://sketchfab.com/show/#{@model_id}" if result == 6  
                     
                 else
                 
-                    d.close
                     UI.messagebox "Sketchfab upload failed. Error: " + json['error']
                 
                 end
                                 
-                # Then delete the temporary files
-                upfile.close                
+                # Then delete the temporary files               
                 File.delete @zip_name if File.exists?(@zip_name) 
                 File.delete @filename if File.exists?(@filename) 
                 #  FileUtils.rm(@zip_name) if File.exists?(@zip_name)
@@ -502,7 +534,12 @@ module AS_SketchfabUploader
             <p><label for="private">Make model private?</label><input type="checkbox" name="private" id="private" value="" /> <span style="font-weight:normal;">(PRO account required)</span></p>
             <p id="pw-field" style="display:none;"><label for="password">Password</label><input type="text" name="password" id="password" value="" style="width:200px;" /></p>
             <p><label for="token">Your API token *</label><input type="text" name="token" id="token" value="" style="width:200px;" /></p>
-            <p><label for="options">Options:</label><input type="checkbox" name="edges" id="edges" checked="true" value="True" /> Include edges</p>
+            <p><label for="options">Options:</label><input class="cbox" type="checkbox" name="edges" id="edges" checked="true" value="True" /> Export edges<br />
+            <input class="cbox" type="checkbox" style="margin-left:150px;" name="textures" id="textures" checked="true" value="True" /> Export textures<br />
+            <input class="cbox" type="checkbox" style="margin-left:150px;" name="faces" id="faces" value="" /> Export two-sided faces<br />
+            <input class="cbox" type="checkbox" style="margin-left:150px;" name="instances" id="instances" checked="true" value="True" /> Preserve component hierarchy<br />
+            <input class="cbox" type="checkbox" style="margin-left:150px;" name="materials" id="materials" value="" /> Use 'color by layer' materials
+            </p>
             <p><input type="submit" id="submit" value="Submit Model" style="font-weight:bold;" /></p>
         </form>
         <p><span style="float:left;"><button value="Cancel" id="cancel">Dismiss</button></span><span style="float:right;margin-top:10px;">&copy; 2012-2014 by <a href="http://www.alexschreyer.net/" title="http://www.alexschreyer.net/" target="_blank" style="color:orange">Alex Schreyer</a></span></p>
@@ -540,7 +577,7 @@ module AS_SketchfabUploader
             $('#pw-field').toggle(); 
         });
 
-        $('#edges').click(function(){
+        $('.cbox').click(function(){
             if ($(this).val() == 'True') {
                 $(this).val('');
             } else {

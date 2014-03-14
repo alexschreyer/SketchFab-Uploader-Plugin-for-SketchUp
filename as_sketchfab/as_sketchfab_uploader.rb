@@ -56,6 +56,7 @@ History:        1.0 (7/13/2012):
                 - Added more export options to dialog (2014)
                 - Added error handling in uploading code (2014)
                 - Changed upload to SSL (2014), 2013 was always SSL
+                - Wrapped modules in my namespace
 
 
 Issues/To-do:

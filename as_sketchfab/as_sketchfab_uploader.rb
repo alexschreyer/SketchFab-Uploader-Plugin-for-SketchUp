@@ -246,7 +246,7 @@ module AS_SketchfabUploader
                 File.delete @filename if File.exists?(@filename) 
                 #  FileUtils.rm(@zip_name) if File.exists?(@zip_name)
                 #  FileUtils.rm(@filename) if File.exists?(@filename)
-                FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)                 
+                AS_SketchfabUploader::FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)                 
                 
                 defaults = Sketchup.write_default "Sketchfab", "api_token", p
                 d.execute_script('submitted()')

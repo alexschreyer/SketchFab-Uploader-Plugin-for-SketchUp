@@ -1,4 +1,5 @@
 module AS_SketchfabUploader
+# This is just a namespaced version of the 1.8.6 fileutils
 
     # 
     # = fileutils.rb

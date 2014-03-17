@@ -13,8 +13,8 @@ Author :        Alexander Schreyer, www.alexschreyer.net, mail@alexschreyer.net
 Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/
 
 Name :          Sketchfab Uploader
-Version:        2.0
-Date :          3/11/2014
+Version:        2.1
+Date :          3/17/2014
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -56,7 +56,9 @@ History:        1.0 (7/13/2012):
                 - Added more export options to dialog (2014)
                 - Added error handling in uploading code (2014)
                 - Changed upload to SSL (2014), 2013 was always SSL
-                - Wrapped modules in my namespace
+                2.1 (3/17/2014):
+                - Wrapped external modules in my namespace
+                - Consolidated code
 
 
 Issues/To-do:
@@ -355,8 +357,8 @@ module AS_SketchfabUploader
         require 'uri'
         require 'net/http'
         require 'net/https'
-        require 'net/http/post/multipart'
         require 'openssl'
+        require 'multipart-post-as'
         require 'json'
         # Can load the new Fileutils here
         require 'fileutils'
@@ -432,14 +434,10 @@ module AS_SketchfabUploader
                     # Create ZIP file
                     Zip.create(@zip_name, @filename, @asset_dir)             
                     
-                    # Open file for multipart upload
-                    upfile = File.new(@zip_name)
-                    encdata = UploadIO.new(upfile, "application/zip", "model.zip")            
-                                    
                     # Compile data
                     data = {
                               'token' => p,
-                              'fileModel' => encdata,
+                              'fileModel' => AS_SketchfabUploader::UploadIO.new(@zip_name, "application/zip"),
                               'title' => mytitle,
                               'description' => description,
                               'tags' => tags,
@@ -449,22 +447,22 @@ module AS_SketchfabUploader
                     }
                     
                     # Submission URL
-                    uri = URI.parse('https://api.sketchfab.com/v1/models')
+                    url = 'https://api.sketchfab.com/v1/models'
+                    uri = URI.parse(url)
                     
                     # Prepare data for submission
-                    req = Net::HTTP::Post::Multipart.new uri.path, data                                
+                    req = AS_SketchfabUploader::Multipart.new uri.path, data
                 
                     # Submit via SSL
                     https = Net::HTTP.new(uri.host, uri.port)
                     https.use_ssl = true
+                    # Can't properly verify certificate with Sketchfab - OK here
                     https.verify_mode = OpenSSL::SSL::VERIFY_NONE
                     res = https.start { |cnt| cnt.request(req) }
                     
                     # Now extract the resulting data
                     json = JSON.parse(res.body.gsub(/"/,"\""))                 
                     @success = json['success']   
-                    
-                    upfile.close 
                     
                 rescue Exception => e
                 
@@ -485,7 +483,9 @@ module AS_SketchfabUploader
                     
                 else
                 
-                    UI.messagebox "Sketchfab upload failed. Error: " + json['error']
+                    fb = ""
+                    fb = " Error: " + json['error'] if json
+                    UI.messagebox "Sketchfab upload failed." + fb
                 
                 end
                                 

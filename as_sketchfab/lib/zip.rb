@@ -1,5 +1,4 @@
 module AS_SketchfabUploader
-
 # A small module to zip files
 
     module Zip

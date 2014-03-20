@@ -59,6 +59,7 @@ History:        1.0 (7/13/2012):
                 2.1 (3/17/2014):
                 - Wrapped external modules in my namespace
                 - Consolidated code
+                - Switched export location to TEMP folder
 
 
 Issues/To-do:
@@ -149,7 +150,7 @@ module AS_SketchfabUploader
     # Set temporary folder locations and filenames
     # Don't use root or plugin folders because of writing permissions
     # Get user directory for temporary file storage
-    @user_dir = (ENV['USERPROFILE'] != nil) ? ENV['USERPROFILE'] :
+    @user_dir = (ENV['TEMP'] != nil) ? ENV['TEMP'] :
                 ( (ENV['HOME'] != nil) ? ENV['HOME'] : 
                 File.dirname(__FILE__) )
     # Cleanup slashes
@@ -243,12 +244,20 @@ module AS_SketchfabUploader
                 # Submit data to Sketchfab - need to use old API with JSON
                 d.post_url("https://api.sketchfab.com/model", json)
                 
-                # Then delete the temporary files             
-                File.delete @zip_name if File.exists?(@zip_name) 
-                File.delete @filename if File.exists?(@filename) 
-                #  FileUtils.rm(@zip_name) if File.exists?(@zip_name)
-                #  FileUtils.rm(@filename) if File.exists?(@filename)
-                AS_SketchfabUploader::FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)                 
+                begin
+    
+                    # Then delete the temporary files               
+                    # File.delete @zip_name if File.exists?(@zip_name) 
+                    # File.delete @filename if File.exists?(@filename) 
+                    AS_SketchfabUploader::FileUtils.rm_f(@zip_name) if File.exists?(@zip_name)
+                    AS_SketchfabUploader::FileUtils.rm_f(@filename) if File.exists?(@filename)
+                    AS_SketchfabUploader::FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)  
+                
+                rescue Exception => e
+                
+                    UI.messagebox e
+                    
+                end                
                 
                 defaults = Sketchup.write_default "Sketchfab", "api_token", p
                 d.execute_script('submitted()')
@@ -432,12 +441,13 @@ module AS_SketchfabUploader
                 begin
                 
                     # Create ZIP file
-                    Zip.create(@zip_name, @filename, @asset_dir)             
+                    Zip.create(@zip_name, @filename, @asset_dir)   
+                    upfile = AS_SketchfabUploader::UploadIO.new(@zip_name, "application/zip")
                     
                     # Compile data
                     data = {
                               'token' => p,
-                              'fileModel' => AS_SketchfabUploader::UploadIO.new(@zip_name, "application/zip"),
+                              'fileModel' => upfile,
                               'title' => mytitle,
                               'description' => description,
                               'tags' => tags,
@@ -464,6 +474,10 @@ module AS_SketchfabUploader
                     json = JSON.parse(res.body.gsub(/"/,"\""))                 
                     @success = json['success']   
                     
+                    # Free some resources
+                    upfile.close
+                    GC.start
+                    
                 rescue Exception => e
                 
                     UI.messagebox e
@@ -488,13 +502,21 @@ module AS_SketchfabUploader
                     UI.messagebox "Sketchfab upload failed." + fb
                 
                 end
-                                
-                # Then delete the temporary files               
-                File.delete @zip_name if File.exists?(@zip_name) 
-                File.delete @filename if File.exists?(@filename) 
-                #  FileUtils.rm(@zip_name) if File.exists?(@zip_name)
-                #  FileUtils.rm(@filename) if File.exists?(@filename)
-                FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)                 
+                
+                begin
+    
+                    # Then delete the temporary files               
+                    # File.delete @zip_name if File.exists?(@zip_name) 
+                    # File.delete @filename if File.exists?(@filename) 
+                    FileUtils.rm_f(@zip_name) if File.exists?(@zip_name)
+                    FileUtils.rm_f(@filename) if File.exists?(@filename)
+                    FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)   
+                
+                rescue Exception => e
+                
+                    UI.messagebox e
+                    
+                end                  
                 
                 # Save token for the next time
                 defaults = Sketchup.write_default "as_Sketchfab", "api_token", p                

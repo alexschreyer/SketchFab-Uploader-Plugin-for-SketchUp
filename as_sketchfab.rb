@@ -14,8 +14,8 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 
 Name :          Sketchfab Uploader
 
-Version:        2.1
-Date :          3/17/2014
+Version:        2.2
+Date :          TBD
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -61,8 +61,11 @@ History:        1.0 (7/13/2012):
                 - Wrapped external modules in my namespace
                 - Consolidated code
                 - Switched export location to TEMP folder
-                TBD:
-                - Code cleanup
+                2.2 (TBD):
+                - Code cleanup, wrapped in my module
+                - Updated Sketchfab logo
+                - Token field hides content
+                - Removed support for instanced upload (doesn't work for Sketchfab)
 
 
 Issues/To-do:
@@ -148,9 +151,9 @@ require 'extensions'
 
 
 as_sketchfab = SketchupExtension.new "Sketchfab Uploader", "as_sketchfab/as_sketchfab_uploader.rb"
-as_sketchfab.copyright= 'Copyright 2012-2014 Alexander C. Schreyer'
+as_sketchfab.copyright= 'Copyright 2012-2015 Alexander C. Schreyer'
 as_sketchfab.creator= 'Alexander C. Schreyer, www.alexschreyer.net'
-as_sketchfab.version = '2.1'
+as_sketchfab.version = '2.2'
 as_sketchfab.description = "Uploads the current model (or the selection) to the Sketchfab.com website."
 Sketchup.register_extension as_sketchfab, true
 

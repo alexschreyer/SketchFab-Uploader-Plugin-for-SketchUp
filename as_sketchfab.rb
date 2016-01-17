@@ -15,7 +15,7 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 Name :          Sketchfab Uploader
 
 Version:        2.2
-Date :          TBD
+Date :          1/17/2016
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -61,10 +61,10 @@ History:        1.0 (7/13/2012):
                 - Wrapped external modules in my namespace
                 - Consolidated code
                 - Switched export location to TEMP folder
-                2.2 (TBD):
-                - Code cleanup, wrapped in my module
+                2.2 (1/17/2016):
+                - Code cleanup, wrapped in my module for consistency
                 - Updated Sketchfab logo
-                - Token field hides content
+                - Token field hides content (password input)
                 - Removed support for instanced upload (doesn't work for Sketchfab)
 
 

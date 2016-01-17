@@ -161,7 +161,7 @@ module AS_Extensions
                   <p><label for="token">Your API token *</label><input type="password" name="token" id="token" value="" placeholder="Paste your token here" style="width:200px;" /></p>
                   <p><input type="submit" id="submit" value="Submit Model" style="font-weight:bold;" /></p>
               </form>
-              <p><span style="float:left;"><button value="Cancel" id="cancel">Dismiss</button></span><span style="float:right;margin-top:10px;">&copy; 2012-2014 by <a href="http://www.alexschreyer.net/" title="http://www.alexschreyer.net/" target="_blank" style="color:orange">Alex Schreyer</a></span></p>
+              <p><span style="float:left;"><button value="Cancel" id="cancel">Dismiss</button></span><span style="float:right;margin-top:10px;">&copy; 2012-2016 by <a href="http://www.alexschreyer.net/" title="http://www.alexschreyer.net/" target="_blank" style="color:orange">Alex Schreyer</a></span></p>
               <p></p>
               <script type="text/javascript">
               $(function(){
@@ -435,7 +435,7 @@ module AS_Extensions
               </p>
               <p><input type="submit" id="submit" value="Submit Model" style="font-weight:bold;" /></p>
           </form>
-          <p><span style="float:left;"><button value="Cancel" id="cancel">Dismiss</button></span><span style="float:right;margin-top:10px;">&copy; 2012-2014 by <a href="http://www.alexschreyer.net/" title="http://www.alexschreyer.net/" target="_blank" style="color:orange">Alex Schreyer</a></span></p>
+          <p><span style="float:left;"><button value="Cancel" id="cancel">Dismiss</button></span><span style="float:right;margin-top:10px;">&copy; 2012-2016 by <a href="http://www.alexschreyer.net/" title="http://www.alexschreyer.net/" target="_blank" style="color:orange">Alex Schreyer</a></span></p>
           <p></p>
           <script type="text/javascript">
           $(function(){

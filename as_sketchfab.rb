@@ -1,5 +1,5 @@
 =begin
-Copyright 2012-2015, Alexander C. Schreyer
+Copyright 2012-2016, Alexander C. Schreyer
 All Rights Reserved
 
 THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -15,7 +15,7 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 Name :          Sketchfab Uploader
 
 Version:        2.2
-Date :          1/17/2016
+Date :          1/18/2016
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -61,11 +61,15 @@ History:        1.0 (7/13/2012):
                 - Wrapped external modules in my namespace
                 - Consolidated code
                 - Switched export location to TEMP folder
-                2.2 (1/17/2016):
+                2.2 (1/18/2016):
                 - Code cleanup, wrapped in my module for consistency
                 - Updated Sketchfab logo
                 - Token field hides content (password input)
                 - Removed support for instanced upload (doesn't work for Sketchfab)
+                - Moved html dialogs into separate files
+                - Included local version of jQuery, updated jQuery
+                - Checkbox selection now saves state
+                - Set maxlength for input fields
 
 
 Issues/To-do:
@@ -151,10 +155,10 @@ require 'extensions'
 
 
 as_sketchfab = SketchupExtension.new "Sketchfab Uploader", "as_sketchfab/as_sketchfab_uploader.rb"
-as_sketchfab.copyright= 'Copyright 2012-2015 Alexander C. Schreyer'
+as_sketchfab.copyright= 'Copyright 2012-2016 Alexander C. Schreyer'
 as_sketchfab.creator= 'Alexander C. Schreyer, www.alexschreyer.net'
 as_sketchfab.version = '2.2'
-as_sketchfab.description = "Uploads the current model (or the selection) to the Sketchfab.com website."
+as_sketchfab.description = "Uploads the current model (or the selection) to the Sketchfab.com website for interactive viewing in a browser."
 Sketchup.register_extension as_sketchfab, true
 
 

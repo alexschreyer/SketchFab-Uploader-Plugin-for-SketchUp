@@ -18,11 +18,18 @@ module AS_Extensions
 
 
       # Some general variables
+      
+      # Extension name for defaults etc.
+      @extname = "as_Sketchfab"
+      @extdir = File.dirname(__FILE__).tr("\\","/")
 
       # Set temporary folder locations and filenames
       # Don't use root or plugin folders because of writing permissions
+      
       # Get temp directory for temporary file storage
       @user_dir = (defined? Sketchup.temp_dir) ? Sketchup.temp_dir : ENV['TMPDIR'] || ENV['TMP'] || ENV['TEMP']
+      Sketchup.write_default @extname, "user_dir", @user_dir
+      
       # Cleanup slashes
       @user_dir = @user_dir.tr("\\","/")
       @filename = File.join(@user_dir , 'temp_export.dae')
@@ -30,6 +37,7 @@ module AS_Extensions
       @zip_name = File.join(@user_dir,'temp_export.zip')
 
       # Exporter options - doesn't work with KMZ export, though
+      # Need to have instancing false as per Sketchfab
       @options_hash = { :triangulated_faces   => true,
                         :doublesided_faces    => false,
                         :edges                => true,
@@ -78,7 +86,6 @@ module AS_Extensions
               dlg.min_width = 450
               dlg.max_width = 450
               dlg.set_size(450,650)
-              logo = File.join(File.dirname(__FILE__) , 'uploader-logo.png')
 
               # Close dialog callback
               dlg.add_action_callback('close_me') {|d, p|
@@ -88,7 +95,7 @@ module AS_Extensions
               # Callback to prefill page elements (token)
               dlg.add_action_callback('prefill') {|d, p|
                   # Need to do this because we need to wait until page has loaded
-                  mytoken = Sketchup.read_default "Sketchfab", "api_token", "Paste your token here"
+                  mytoken = Sketchup.read_default @extname, "api_token", "Paste your token here"
                   c = "$('#token').val('" + mytoken + "')"
                   d.execute_script(c)
               }
@@ -129,92 +136,13 @@ module AS_Extensions
 
                   end
 
-                  defaults = Sketchup.write_default "Sketchfab", "api_token", p
+                  Sketchup.write_default @extname, "api_token", p
                   d.execute_script('submitted()')
 
               }
-
-              dlg_html = %Q~
-              <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-              <html xmlns="http://www.w3.org/1999/xhtml"><head><title>Sketchfab.com Uploader</title>
-              <style type="text/css">
-                  * {font-family: Arial, Helvetica, sans-serif; font-size:13px;}
-                  body {background-color:#3d3d3d;padding:10px;min-width:220px;}
-                  h1, label, p {color:#eee; font-weight: bold;}
-                  h1 {font-size:2em;color:orange}
-                  a, a:hover, a:visited {color:orange}
-                  input, button, textarea {color:#fff; background-color:#666; border:none;}
-                  label {display: block; width: 150px;float: left;}
-              </style>
-              <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-              </head>
-              <body>
-              <img src="#{logo}" style="width:100%;" />
-              <p id="text">This dialog uploads the currently open model to Sketchfab.com. All fields marked with a * are mandatory.
-              You can get your API token from the <a href='http://sketchfab.com' title='http://sketchfab.com' target='_blank'>Sketchfab website</a> after registering there.</p>
-              <form id="SketchfabSubmit" name="SketchfabSubmit" action="">
-                  <p><label for="mytitle">Model title *</label><input type="text" id="mytitle" name="mytitle" style="width:200px;" /></p>
-                  <p><label for="description">Description</label><textarea name="description" id="description" style="height:3em;width:200px;"></textarea></p>
-                  <p><label for="tags">Tags (space-separated)</label><input type="text" id="tags" name="tags" value="sketchup" style="width:200px;" /></p>
-                  <p><label for="private">Make model private?</label><input type="checkbox" name="private" id="private" value="" /> <span style="font-weight:normal;">(PRO account required)</span></p>
-                  <p id="pw-field" style="display:none;"><label for="password">Password</label><input type="text" name="password" id="password" value="" style="width:200px;" /></p>
-                  <p><label for="token">Your API token *</label><input type="password" name="token" id="token" value="" placeholder="Paste your token here" style="width:200px;" /></p>
-                  <p><input type="submit" id="submit" value="Submit Model" style="font-weight:bold;" /></p>
-              </form>
-              <p><span style="float:left;"><button value="Cancel" id="cancel">Dismiss</button></span><span style="float:right;margin-top:10px;">&copy; 2012-2016 by <a href="http://www.alexschreyer.net/" title="http://www.alexschreyer.net/" target="_blank" style="color:orange">Alex Schreyer</a></span></p>
-              <p></p>
-              <script type="text/javascript">
-              $(function(){
-                $("#SketchfabSubmit").submit(function(event){
-                      event.preventDefault();
-
-                      if ($('#mytitle').val().length == 0) {
-                          alert('You must fill in a title.');
-                          return false;
-                      }
-
-                      if ($('#token').val().length < 32) {
-                          alert('Your token looks like it is too short. Please double-check.');
-                          return false;
-                      }
-
-                      // Submit form and give feedback
-                      token = $('#token').val();
-                      window.location='skp:send@'+token;
-                });
-              });
-              $('#cancel').click(function(){
-                  window.location='skp:close_me';
-              });
-
-              $('#private').click(function(){
-                  if ($(this).val() == 'True') {
-                      $(this).val('');
-                  } else {
-                      $(this).val('True');
-                  };
-                  $('#pw-field').toggle();
-              });
-
-              $(document).ready(function() {
-                  window.location='skp:prefill';
-              });
-
-              function submitted() {
-                  $('h1').html('Model Submitted');
-                  scomment = "Your model has been submitted. You can soon find it on your <a href='http://sketchfab.com/dashboard/' title='http://sketchfab.com/dashboard/' target='_blank'>Sketchfab dashboard</a>.<br /><br />"+
-                  "Before closing this dialog, please wait until:<br /><br />"+
-                  "<i>On Windows:</i> a browser download dialog opens (you can cancel it).<br /><br />"+
-                  "<i>On the Mac:</i> this dialog changes into a confirmation code (close it afterwards).";
-                  $('#text').html(scomment);
-                  $('form').html('');
-              };
-
-              </script>
-              </body></html>
-              ~ # End of HTML
-
-              dlg.set_html(dlg_html)
+              
+              # Set dialog HTML from external file
+              dlg.set_file(File.join(@extdir,'as_sketchfab_form2013.html'))
               dlg.show_modal
 
           else
@@ -255,8 +183,6 @@ module AS_Extensions
           dlg.min_width = 450
           dlg.max_width = 450
           dlg.set_size(450,650)
-          logo = File.join(File.dirname(__FILE__) , 'uploader-logo.png')
-
 
           # Close dialog callback
           dlg.add_action_callback('close_me') {|d, p|
@@ -269,10 +195,17 @@ module AS_Extensions
           # Callback to prefill page elements (token)
           dlg.add_action_callback('prefill') {|d, p|
 
+              # Prefill all form elements from registry here
               # Need to do this because we need to wait until page has loaded
-              mytoken = Sketchup.read_default "as_Sketchfab", "api_token", "Paste your token here"
-              c = "$('#token').val('" + mytoken + "')"
-              d.execute_script(c)
+              mytoken = Sketchup.read_default @extname, "api_token"
+              edg = Sketchup.read_default @extname, "edges", "true"
+              mat = Sketchup.read_default @extname, "materials", "false"  
+              tex = Sketchup.read_default @extname, "textures", "true"
+              fac = Sketchup.read_default @extname, "faces", "false"
+              c = "$('#token').val('#{mytoken}');"
+              d.execute_script(c)              
+              c = "$('#edges').prop('checked',#{edg}); $('#materials').prop('checked',#{mat}); $('#textures').prop('checked',#{tex}); $('#faces').prop('checked',#{fac});"
+              d.execute_script(c)            
 
           }
 
@@ -293,13 +226,21 @@ module AS_Extensions
               tex = d.get_element_value("textures").gsub(/"/, "'")
               fac = d.get_element_value("faces").gsub(/"/, "'")
               # ins = d.get_element_value("instances").gsub(/"/, "'")
-
+              
+              # Write form elements to registry here
+              Sketchup.write_default @extname, "api_token", p
+              Sketchup.write_default @extname, "edges", edg
+              Sketchup.write_default @extname, "materials", mat              
+              Sketchup.write_default @extname, "textures", tex
+              Sketchup.write_default @extname, "faces", fac
+              # Sketchup.write_default @extname, "instances", ins
+              
               # Adjust options from dialog
-              (edg == "True") ? @options_hash[:edges] = true : @options_hash[:edges] = false
-              (mat == "True") ? @options_hash[:materials_by_layer] = true : @options_hash[:materials_by_layer] = false
-              (tex == "True") ? @options_hash[:texture_maps] = true : @options_hash[:texture_maps] = false
-              (fac == "True") ? @options_hash[:doublesided_faces] = true : @options_hash[:doublesided_faces] = false
-              # (ins == "True") ? @options_hash[:preserve_instancing] = true : @options_hash[:preserve_instancing] = false
+              (edg == "true") ? @options_hash[:edges] = true : @options_hash[:edges] = false
+              (mat == "true") ? @options_hash[:materials_by_layer] = true : @options_hash[:materials_by_layer] = false
+              (tex == "true") ? @options_hash[:texture_maps] = true : @options_hash[:texture_maps] = false
+              (fac == "true") ? @options_hash[:doublesided_faces] = true : @options_hash[:doublesided_faces] = false
+              # (ins == "true") ? @options_hash[:preserve_instancing] = true : @options_hash[:preserve_instancing] = false
 
               # Export model as DAE and process
               if Sketchup.active_model.export @filename, @options_hash then
@@ -388,9 +329,6 @@ module AS_Extensions
 
                   end
 
-                  # Save token for the next time
-                  defaults = Sketchup.write_default "as_Sketchfab", "api_token", p
-
               else
 
                   d.close
@@ -401,98 +339,8 @@ module AS_Extensions
           }
 
 
-          # Set dialog HTML
-          dlg_html = %Q~
-          <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-          <html xmlns="http://www.w3.org/1999/xhtml"><head><title>Sketchfab.com Uploader</title>
-          <style type="text/css">
-              * {font-family: Arial, Helvetica, sans-serif; font-size:13px;}
-              body {background-color:#3d3d3d;padding:10px;min-width:220px;}
-              h1, label, p {color:#eee; font-weight: bold;}
-              h1 {font-size:2em;color:orange}
-              a, a:hover, a:visited {color:orange}
-              input, button, textarea {color:#fff; background-color:#666; border:none;}
-              label {display: block; width: 150px;float: left;}
-          </style>
-          <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-          </head>
-          <body>
-          <img src="#{logo}" style="width:100%;" />
-          <p id="text">This dialog uploads the currently open model to Sketchfab.com. All fields marked with a * are mandatory.
-          You can get your API token from the <a href='http://sketchfab.com' title='http://sketchfab.com' target='_blank'>Sketchfab website</a> after registering there.</p>
-          <form id="SketchfabSubmit" name="SketchfabSubmit" action="">
-              <p><label for="mytitle">Model title *</label><input type="text" id="mytitle" name="mytitle" style="width:200px;" /></p>
-              <p><label for="description">Description</label><textarea name="description" id="description" style="height:3em;width:200px;"></textarea></p>
-              <p><label for="tags">Tags (space-separated)</label><input type="text" id="tags" name="tags" value="sketchup" style="width:200px;" /></p>
-              <p><label for="private">Make model private?</label><input type="checkbox" name="private" id="private" value="" /> <span style="font-weight:normal;">(PRO account required)</span></p>
-              <p id="pw-field" style="display:none;"><label for="password">Password</label><input type="text" name="password" id="password" value="" style="width:200px;" /></p>
-              <p><label for="token">Your API token *</label><input type="password" name="token" id="token" value="" placeholder="Paste your token here" style="width:200px;" /></p>
-              <p><label for="options">Options:</label><input class="cbox" type="checkbox" name="edges" id="edges" checked="true" value="True" /> Export edges<br />
-              <input class="cbox" type="checkbox" style="margin-left:150px;" name="textures" id="textures" checked="true" value="True" /> Export textures<br />
-              <input class="cbox" type="checkbox" style="margin-left:150px;" name="faces" id="faces" value="" /> Export two-sided faces<br />
-              <!-- <input class="cbox" type="checkbox" style="margin-left:150px;" name="instances" id="instances" checked="true" value="True" /> Preserve component hierarchy<br /> -->
-              <input class="cbox" type="checkbox" style="margin-left:150px;" name="materials" id="materials" value="" /> Use 'color by layer' materials
-              </p>
-              <p><input type="submit" id="submit" value="Submit Model" style="font-weight:bold;" /></p>
-          </form>
-          <p><span style="float:left;"><button value="Cancel" id="cancel">Dismiss</button></span><span style="float:right;margin-top:10px;">&copy; 2012-2016 by <a href="http://www.alexschreyer.net/" title="http://www.alexschreyer.net/" target="_blank" style="color:orange">Alex Schreyer</a></span></p>
-          <p></p>
-          <script type="text/javascript">
-          $(function(){
-            $("#SketchfabSubmit").submit(function(event){
-                  event.preventDefault();
-
-                  if ($('#mytitle').val().length == 0) {
-                      alert('You must fill in a title.');
-                      return false;
-                  }
-
-                  if ($('#token').val().length < 32) {
-                      alert('Your token looks like it is too short. Please double-check.');
-                      return false;
-                  }
-
-                  // Submit form and give feedback
-                  token = $('#token').val();
-                  window.location='skp:send@'+token;
-            });
-          });
-          $('#cancel').click(function(){
-              window.location='skp:close_me';
-          });
-
-          $('#private').click(function(){
-              if ($(this).val() == 'True') {
-                  $(this).val('');
-              } else {
-                  $(this).val('True');
-              };
-              $('#pw-field').toggle();
-          });
-
-          $('.cbox').click(function(){
-              if ($(this).val() == 'True') {
-                  $(this).val('');
-              } else {
-                  $(this).val('True');
-              };
-          });
-
-          $(document).ready(function() {
-              window.location='skp:prefill';
-          });
-
-          function submitted() {
-              $('h1').html('Processing...');
-              scomment = 'Your model has been submitted. Please hang on while we wait for a response from Sketchfab.';
-              $('#text').html(scomment);
-              $('form').html('');
-          };
-
-          </script>
-          </body></html>
-          ~ # End of HTML
-          dlg.set_html(dlg_html)
+          # Set dialog HTML from external file
+          dlg.set_file(File.join(@extdir,'as_sketchfab_form2014.html'))
           dlg.show_modal
 
 

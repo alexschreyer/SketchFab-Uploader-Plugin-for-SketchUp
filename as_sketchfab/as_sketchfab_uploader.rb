@@ -91,7 +91,7 @@ module AS_Extensions
               dlg.add_action_callback('close_me') {|d, p|
                   d.close
               }
-
+           
               # Callback to prefill page elements (token)
               dlg.add_action_callback('prefill') {|d, p|
                   # Need to do this because we need to wait until page has loaded
@@ -205,7 +205,9 @@ module AS_Extensions
               c = "$('#token').val('#{mytoken}');"
               d.execute_script(c)              
               c = "$('#edges').prop('checked',#{edg}); $('#materials').prop('checked',#{mat}); $('#textures').prop('checked',#{tex}); $('#faces').prop('checked',#{fac});"
-              d.execute_script(c)            
+              d.execute_script(c)
+              c = "$('#edges').val(#{edg}); $('#materials').val(#{mat}); $('#textures').val(#{tex}); $('#faces').val(#{fac});"
+              d.execute_script(c)
 
           }
 

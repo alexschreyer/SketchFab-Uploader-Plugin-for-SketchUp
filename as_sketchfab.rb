@@ -14,8 +14,8 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 
 Name :          Sketchfab Uploader
 
-Version:        2.2
-Date :          1/18/2016
+Version:        2.3
+Date :          12/5/2016
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -70,6 +70,8 @@ History:        1.0 (7/13/2012):
                 - Included local version of jQuery, updated jQuery
                 - Checkbox selection now saves state
                 - Set maxlength for input fields
+                2.3 (12/5/2016):
+                - Fixed dialog issue in SU 2017 (min/max size)
 
 
 Issues/To-do:
@@ -157,7 +159,7 @@ require 'extensions'
 as_sketchfab = SketchupExtension.new "Sketchfab Uploader", "as_sketchfab/as_sketchfab_uploader.rb"
 as_sketchfab.copyright= 'Copyright 2012-2016 Alexander C. Schreyer'
 as_sketchfab.creator= 'Alexander C. Schreyer, www.alexschreyer.net'
-as_sketchfab.version = '2.2'
+as_sketchfab.version = '2.3'
 as_sketchfab.description = "Uploads the current model (or the selection) to the Sketchfab.com website for interactive viewing in a browser."
 Sketchup.register_extension as_sketchfab, true
 

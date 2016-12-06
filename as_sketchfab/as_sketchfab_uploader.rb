@@ -84,7 +84,8 @@ module AS_Extensions
               dlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
               dlg.navigation_buttons_enabled = false
               dlg.min_width = 450
-              dlg.max_width = 450
+              dlg.min_height = 650
+              # dlg.max_width = 450
               dlg.set_size(450,650)
 
               # Close dialog callback
@@ -181,7 +182,8 @@ module AS_Extensions
           dlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
           dlg.navigation_buttons_enabled = false
           dlg.min_width = 450
-          dlg.max_width = 450
+          dlg.min_height = 650
+          # dlg.max_width = 450
           dlg.set_size(450,650)
 
           # Close dialog callback

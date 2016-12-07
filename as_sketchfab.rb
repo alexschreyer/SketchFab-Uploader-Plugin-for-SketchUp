@@ -72,6 +72,7 @@ History:        1.0 (7/13/2012):
                 - Set maxlength for input fields
                 2.3 (12/5/2016):
                 - Fixed dialog issue in SU 2017 (min/max size)
+                - Fixed extension loader code
 
 
 Issues/To-do:
@@ -149,19 +150,37 @@ Licenses:
 # ========================
 
 
-require 'sketchup'
-require 'extensions'
+require 'sketchup.rb'
+require 'extensions.rb'
 
 
 # ========================
 
 
-as_sketchfab = SketchupExtension.new "Sketchfab Uploader", "as_sketchfab/as_sketchfab_uploader.rb"
-as_sketchfab.copyright= 'Copyright 2012-2016 Alexander C. Schreyer'
-as_sketchfab.creator= 'Alexander C. Schreyer, www.alexschreyer.net'
-as_sketchfab.version = '2.3'
-as_sketchfab.description = "Uploads the current model (or the selection) to the Sketchfab.com website for interactive viewing in a browser."
-Sketchup.register_extension as_sketchfab, true
+module AS_Extensions
+
+  module AS_SketchfabUploader
+  
+    @extversion           = "2.3"
+    @exttitle             = "Sketchfab Uploader"
+    @extname              = "as_sketchfab"
+    
+    @extdir = File.dirname(__FILE__)
+    @extdir.force_encoding('UTF-8') if @extdir.respond_to?(:force_encoding)
+    
+    loader = File.join( @extdir , @extname , "as_sketchfab_uploader.rb" )
+   
+    extension             = SketchupExtension.new( @exttitle , loader )
+    extension.copyright   = "Copyright 2012-#{Time.now.year} Alexander C. Schreyer"
+    extension.creator     = "Alexander C. Schreyer, www.alexschreyer.net"
+    extension.version     = @extversion
+    extension.description = "Uploads the current model (or the selection) to the Sketchfab.com website for interactive viewing in a browser."
+    
+    Sketchup.register_extension( extension , true )
+         
+  end  # module AS_SketchfabUploader
+  
+end  # module AS_Extensions
 
 
 # ========================

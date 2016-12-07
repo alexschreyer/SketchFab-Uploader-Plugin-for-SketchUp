@@ -20,7 +20,6 @@ module AS_Extensions
       # Some general variables
       
       # Extension name for defaults etc.
-      @extname = "as_Sketchfab"
       @extdir = File.dirname(__FILE__).tr("\\","/")
 
       # Set temporary folder locations and filenames

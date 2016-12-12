@@ -14,8 +14,8 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 
 Name :          Sketchfab Uploader
 
-Version:        2.3
-Date :          12/5/2016
+Version:        2.4
+Date :          12/12/2016
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -73,6 +73,9 @@ History:        1.0 (7/13/2012):
                 2.3 (12/5/2016):
                 - Fixed dialog issue in SU 2017 (min/max size)
                 - Fixed extension loader code
+                2.4 (12/12/2016):
+                - Added help menu item
+                - Code cleanup
 
 
 Issues/To-do:
@@ -161,7 +164,7 @@ module AS_Extensions
 
   module AS_SketchfabUploader
   
-    @extversion           = "2.3"
+    @extversion           = "2.4"
     @exttitle             = "Sketchfab Uploader"
     @extname              = "as_sketchfab"
     

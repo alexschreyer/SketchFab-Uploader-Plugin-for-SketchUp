@@ -3,7 +3,7 @@
 # ========================
 
 
-require 'sketchup'
+require 'sketchup.rb'
 
 
 # ========================
@@ -351,17 +351,30 @@ module AS_Extensions
 
 
       # ========================
+      
+      def self.show_help
+      # Show the website as an About dialog
+      
+        dlg = UI::WebDialog.new("#{@exttitle} - Help", true,'AS_SketchfabUploader', 1100, 800, 150, 150, true)
+        dlg.set_url('http://alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/')
+        dlg.show
+      
+      end # show_help     
 
+
+      # ========================
 
       # Create menu items
       unless file_loaded?(__FILE__)
-
+      
+        sub = UI.menu("File").add_submenu( "Upload to Sketchfab" )
         # Pick based on version
         if Sketchup.version.to_f < 14 then
-          UI.menu("File").add_item("Upload to Sketchfab") {AS_SketchfabUploader::show_dialog_2013}
+          sub.add_item("Upload Model...") { self.show_dialog_2013 }
         else
-          UI.menu("File").add_item("Upload to Sketchfab") {AS_SketchfabUploader::show_dialog_2014}
+          sub.add_item("Upload Model...") { self.show_dialog_2014 }
         end
+        sub.add_item("Help") { self.show_help }
 
         file_loaded(__FILE__)
 

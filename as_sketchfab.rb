@@ -76,6 +76,13 @@ History:        1.0 (7/13/2012):
                 2.4 (12/12/2016):
                 - Added help menu item
                 - Code cleanup
+                2.5 (9/13/2018)
+                - Some backcomp fixes
+                - Added re-upload functionality
+                - Now stores model data (ID, title etc.) on upload in SKP file
+                - Made clear in dialog what gets stored where
+                - Added menu item to edit Model ID
+                - Updated jQuery to latest version
 
 
 Issues/To-do:

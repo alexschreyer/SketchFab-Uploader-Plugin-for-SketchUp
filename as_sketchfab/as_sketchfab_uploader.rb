@@ -19,8 +19,8 @@ module AS_Extensions
 
       # Some general variables
       
-      # Extension name for defaults etc.
-      @extdir = File.dirname(__FILE__).tr("\\","/")
+      # Extension name for defaults etc. w/backcomp
+      @extdir = File.dirname(__FILE__).gsub(%r{//}) { "/" }
 
       # Set temporary folder locations and filenames
       # Don't use root or plugin folders because of writing permissions
@@ -181,9 +181,9 @@ module AS_Extensions
           dlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
           dlg.navigation_buttons_enabled = false
           dlg.min_width = 450
-          dlg.min_height = 650
+          dlg.min_height = 680
           # dlg.max_width = 450
-          dlg.set_size(450,650)
+          dlg.set_size(450,680)
 
           # Close dialog callback
           dlg.add_action_callback('close_me') {|d, p|
@@ -196,19 +196,36 @@ module AS_Extensions
           # Callback to prefill page elements (token)
           dlg.add_action_callback('prefill') {|d, p|
 
-              # Prefill all form elements from registry here
-              # Need to do this because we need to wait until page has loaded
+              # Prefill all form elements from registry and model here
+              # Need to do this as callback because we need to wait until HTML page has loaded
+              
+              # Get registry data for general settings
               mytoken = Sketchup.read_default @extname, "api_token"
               edg = Sketchup.read_default @extname, "edges", "true"
               mat = Sketchup.read_default @extname, "materials", "false"  
               tex = Sketchup.read_default @extname, "textures", "true"
               fac = Sketchup.read_default @extname, "faces", "false"
+              
+              # Get model data for model settings
+              mytitle = Sketchup.active_model.get_attribute 'sketchfab', 'model_title', ''
+              description = Sketchup.active_model.get_attribute 'sketchfab', 'model_description', ''
+              tags = Sketchup.active_model.get_attribute 'sketchfab', 'model_tags', 'sketchup'
+              private = Sketchup.active_model.get_attribute('sketchfab', 'model_private', 'false').downcase
+              password = Sketchup.active_model.get_attribute 'sketchfab', 'model_password', ''      
+              
+              # Send data to dialog
               c = "$('#token').val('#{mytoken}');"
               d.execute_script(c)              
               c = "$('#edges').prop('checked',#{edg}); $('#materials').prop('checked',#{mat}); $('#textures').prop('checked',#{tex}); $('#faces').prop('checked',#{fac});"
               d.execute_script(c)
               c = "$('#edges').val(#{edg}); $('#materials').val(#{mat}); $('#textures').val(#{tex}); $('#faces').val(#{fac});"
               d.execute_script(c)
+              c = "$('#mytitle').val('#{mytitle}'); $('#description').val('#{description}'); $('#tags').val('#{tags}'); $('#password').val('#{password}');"
+              d.execute_script(c)
+              if private == 'true'
+                c = "$('#private').prop('checked',#{private}); $('#pw-field').toggle();"
+                d.execute_script(c)
+              end
 
           }
 
@@ -238,13 +255,20 @@ module AS_Extensions
               Sketchup.write_default @extname, "faces", fac
               # Sketchup.write_default @extname, "instances", ins
               
+              # Write form elements to model here
+              Sketchup.active_model.set_attribute 'sketchfab', 'model_title', mytitle
+              Sketchup.active_model.set_attribute 'sketchfab', 'model_description', description
+              Sketchup.active_model.set_attribute 'sketchfab', 'model_tags', tags
+              Sketchup.active_model.set_attribute 'sketchfab', 'model_private', private
+              Sketchup.active_model.set_attribute 'sketchfab', 'model_password', password
+              
               # Adjust options from dialog
               (edg == "true") ? @options_hash[:edges] = true : @options_hash[:edges] = false
               (mat == "true") ? @options_hash[:materials_by_layer] = true : @options_hash[:materials_by_layer] = false
               (tex == "true") ? @options_hash[:texture_maps] = true : @options_hash[:texture_maps] = false
               (fac == "true") ? @options_hash[:doublesided_faces] = true : @options_hash[:doublesided_faces] = false
               # (ins == "true") ? @options_hash[:preserve_instancing] = true : @options_hash[:preserve_instancing] = false
-
+              
               # Export model as DAE and process
               if Sketchup.active_model.export @filename, @options_hash then
 
@@ -272,6 +296,14 @@ module AS_Extensions
 
                       # Submission URL
                       url = 'https://api.sketchfab.com/v1/models'
+                      
+                      # Should we re-upload the file if it already exists on Sketchfab?   
+                      @model_id = Sketchup.active_model.get_attribute 'sketchfab', 'model_id'
+                      if @model_id
+                        result = UI.messagebox "Model has been previously uploaded. Do you want to update the uploaded model?\n\n'Yes' re-uploads model to Sketchfab (keeps model ID and preserves online edits, e.g. of materials).\n'No' creates new file upload (and a new model ID).", MB_YESNO
+                        url += '/' + @model_id.to_s if result == 6
+                      end
+                      
                       uri = URI.parse(url)
 
                       # Prepare data for submission
@@ -304,6 +336,9 @@ module AS_Extensions
 
                       # Get model info from result
                       @model_id = json['result']['id']
+                      
+                      # Write the model ID to the file as attributes (for later)
+                      Sketchup.active_model.set_attribute 'sketchfab', 'model_id', @model_id
 
                       # Give option to open uploaded model
                       result = UI.messagebox 'Open Sketchfab model in your browser?', MB_YESNO
@@ -312,7 +347,7 @@ module AS_Extensions
                   else
 
                       fb = ""
-                      fb = " Error: " + json['error'] if json
+                      fb = " Error: " + json['error'].to_s if json
                       UI.messagebox "Sketchfab upload failed." + fb
 
                   end
@@ -348,7 +383,20 @@ module AS_Extensions
 
 
       end # show_dialog_2014
+      
+      
+      # ========================      
+      
 
+      def self.set_model_id
+      # Allow to set model id (for re-uploads)
+      
+        @model_id = Sketchup.active_model.get_attribute 'sketchfab', 'model_id'
+        res = UI.inputbox(['Sketchfab Model ID '], [@model_id], 'Edit Sketchfab Model ID in this File')
+        Sketchup.active_model.set_attribute 'sketchfab', 'model_id', res[0]
+      
+      end # set_model_id  
+      
 
       # ========================
       
@@ -374,6 +422,7 @@ module AS_Extensions
         else
           sub.add_item("Upload Model...") { self.show_dialog_2014 }
         end
+        sub.add_item("Edit Model ID") { self.set_model_id }
         sub.add_item("Help") { self.show_help }
 
         file_loaded(__FILE__)

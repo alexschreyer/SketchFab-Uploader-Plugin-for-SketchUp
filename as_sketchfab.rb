@@ -1,5 +1,5 @@
 =begin
-Copyright 2012-2016, Alexander C. Schreyer
+Copyright 2012-2018, Alexander C. Schreyer
 All Rights Reserved
 
 THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -14,8 +14,8 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 
 Name :          Sketchfab Uploader
 
-Version:        2.4
-Date :          12/12/2016
+Version:        2.5
+Date :          9/13/2018
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -79,6 +79,8 @@ History:        1.0 (7/13/2012):
 
 
 Issues/To-do:
+                - Still uses api v1, will update soon
+                - Uses only model data stored in file, not from Sketchfab (e.g. if edited)
                 - For versions before SU 2014: the post_url function does not accept returned data.
                 - Text labels, dimensions, construction-points and -lines, images etc. don't upload (by design)
 
@@ -164,7 +166,7 @@ module AS_Extensions
 
   module AS_SketchfabUploader
   
-    @extversion           = "2.4"
+    @extversion           = "2.5"
     @exttitle             = "Sketchfab Uploader"
     @extname              = "as_sketchfab"
     
@@ -177,7 +179,7 @@ module AS_Extensions
     extension.copyright   = "Copyright 2012-#{Time.now.year} Alexander C. Schreyer"
     extension.creator     = "Alexander C. Schreyer, www.alexschreyer.net"
     extension.version     = @extversion
-    extension.description = "Uploads the current model (or the selection) to the Sketchfab.com website for interactive viewing in a browser."
+    extension.description = "Uploads the current model (or the selection) to the Sketchfab.com website for interactive viewing in a browser. Allows for re-uploads."
     
     Sketchup.register_extension( extension , true )
          

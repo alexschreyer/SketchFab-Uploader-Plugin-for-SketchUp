@@ -250,11 +250,16 @@ module AS_Extensions
       end
   
   
-  # multipart.rb
+  # multipart.rb EDITED
   
-      class Multipart < Net::HTTP::Post
+      class Multipart_Post < Net::HTTP::Post
         include Multipartable
       end
+      
+      class Multipart_Put < Net::HTTP::Put
+        include Multipartable
+      end      
+      
   
   end
   

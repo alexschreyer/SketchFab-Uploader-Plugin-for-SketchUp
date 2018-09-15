@@ -284,9 +284,8 @@ module AS_Extensions
 
                       # Compile data
                       data = {
-                                'token' => p,
-                                'fileModel' => upfile,
-                                'title' => mytitle,
+                                'modelFile' => upfile,
+                                'name' => mytitle,
                                 'description' => description,
                                 'tags' => tags,
                                 'private' => private,
@@ -295,30 +294,49 @@ module AS_Extensions
                       }
 
                       # Submission URL
-                      url = 'https://api.sketchfab.com/v1/models'
+                      url = 'https://api.sketchfab.com/v3/models'
                       
+                      # Prepare data for submission
                       # Should we re-upload the file if it already exists on Sketchfab?   
                       @model_id = Sketchup.active_model.get_attribute 'sketchfab', 'model_id'
-                      if @model_id
-                        result = UI.messagebox "Model has been previously uploaded. Do you want to update the uploaded model?\n\n'Yes' re-uploads model to Sketchfab (keeps model ID and preserves online edits, e.g. of materials).\n'No' creates new file upload (and a new model ID).", MB_YESNO
-                        url += '/' + @model_id.to_s if result == 6
-                      end
                       
-                      uri = URI.parse(url)
-
-                      # Prepare data for submission
-                      req = AS_SketchfabUploader::Multipart.new uri.path, data
+                      if @model_id
+                      
+                        result = UI.messagebox "Model has been previously uploaded. Do you want to update the existing model?\n\n'Yes' re-uploads model to Sketchfab (keeps model ID and preserves online edits, e.g. of materials).\n'No' creates new file upload (and a new model ID).", MB_YESNO
+                        
+                        if result == 6  # Yes, re-upload
+                        
+                          url += '/' + @model_id.to_s 
+                          uri = URI.parse(url)
+                          req = AS_SketchfabUploader::Multipart_Put.new uri.path, data
+                          
+                        else  # Upload as new model
+                        
+                          uri = URI.parse(url)
+                          req = AS_SketchfabUploader::Multipart_Post.new uri.path, data  
+                          
+                        end
+                        
+                      else  # Upload new model
+                      
+                        uri = URI.parse(url)
+                        req = AS_SketchfabUploader::Multipart_Post.new uri.path, data  
+                      
+                      end
+                     
+                      # Add token to header for authorization
+                      req.add_field("Authorization", "Token #{p}")
 
                       # Submit via SSL
                       https = Net::HTTP.new(uri.host, uri.port)
-                      https.use_ssl = true
+                      https.set_debug_output($stdout)
+                      https.use_ssl = true     
                       # Can't properly verify certificate with Sketchfab - OK here
-                      https.verify_mode = OpenSSL::SSL::VERIFY_NONE
-                      res = https.start { |cnt| cnt.request(req) }
+                      https.verify_mode = OpenSSL::SSL::VERIFY_NONE      
 
-                      # Now extract the resulting data
-                      json = JSON.parse(res.body.gsub(/"/,"\""))
-                      @success = json['success']
+                      res = https.start { |cnt| cnt.request(req) }
+                      
+                      @success = true if res.code.to_i < 400 
 
                       # Free some resources
                       upfile.close
@@ -333,20 +351,29 @@ module AS_Extensions
                   d.close
 
                   if @success then
+                  
+                      begin
+                  
+                          # Now extract the resulting data
+                          json = JSON.parse(res.body)
 
-                      # Get model info from result
-                      @model_id = json['result']['id']
+                          # Get model info from result
+                          @model_id = json['uid']
+                          @model_data_uri = json['uri']
+
+                          # Write the model ID to the file as attributes (for later)
+                          Sketchup.active_model.set_attribute 'sketchfab', 'model_id', @model_id
                       
-                      # Write the model ID to the file as attributes (for later)
-                      Sketchup.active_model.set_attribute 'sketchfab', 'model_id', @model_id
-
+                      rescue
+                      
+                      end
+                      
                       # Give option to open uploaded model
                       result = UI.messagebox 'Open Sketchfab model in your browser?', MB_YESNO
-                      UI.openURL "https://sketchfab.com/show/#{@model_id}" if result == 6
+                      UI.openURL "https://sketchfab.com/models/#{@model_id}" if result == 6
 
                   else
 
-                      fb = ""
                       fb = " Error: " + json['error'].to_s if json
                       UI.messagebox "Sketchfab upload failed." + fb
 
@@ -392,7 +419,7 @@ module AS_Extensions
       # Allow to set model id (for re-uploads)
       
         @model_id = Sketchup.active_model.get_attribute 'sketchfab', 'model_id'
-        res = UI.inputbox(['Sketchfab Model ID '], [@model_id], 'Edit Sketchfab Model ID in this File')
+        res = UI.inputbox(['Sketchfab Model ID '], [@model_id], 'Edit Sketchfab Model ID Stored in File')
         Sketchup.active_model.set_attribute 'sketchfab', 'model_id', res[0]
       
       end # set_model_id  

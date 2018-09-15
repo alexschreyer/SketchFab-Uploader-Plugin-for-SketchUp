@@ -82,11 +82,11 @@ History:        1.0 (7/13/2012):
                 - Now stores model data (ID, title etc.) on upload in SKP file
                 - Made clear in dialog what gets stored where
                 - Added menu item to edit Model ID
-                - Updated jQuery to latest version
+                - Updated jQuery and 7zip to latest version
+                - Now uses v3 API
 
 
 Issues/To-do:
-                - Still uses api v1, will update soon
                 - Uses only model data stored in file, not from Sketchfab (e.g. if edited)
                 - For versions before SU 2014: the post_url function does not accept returned data.
                 - Text labels, dimensions, construction-points and -lines, images etc. don't upload (by design)

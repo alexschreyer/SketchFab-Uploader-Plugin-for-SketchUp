@@ -223,7 +223,7 @@ module AS_Extensions
               c = "$('#mytitle').val('#{mytitle}'); $('#description').val('#{description}'); $('#tags').val('#{tags}'); $('#password').val('#{password}');"
               d.execute_script(c)
               if private == 'true'
-                c = "$('#private').prop('checked',#{private}); $('#pw-field').toggle();"
+                c = "$('#private').prop('checked',#{private}); $('#private').val(#{private}); $('#pw-field').toggle();"
                 d.execute_script(c)
               end
 
@@ -287,9 +287,10 @@ module AS_Extensions
                                 'modelFile' => upfile,
                                 'name' => mytitle,
                                 'description' => description,
-                                'tags' => tags,
+                                'tags' => tags.split(' '),
                                 'private' => private,
                                 'password' => password,
+                                'isPublished' => false,
                                 'source' => 'sketchup-exporter'
                       }
 
@@ -300,12 +301,13 @@ module AS_Extensions
                       # Should we re-upload the file if it already exists on Sketchfab?   
                       @model_id = Sketchup.active_model.get_attribute 'sketchfab', 'model_id'
                       
-                      if @model_id
+                      if @model_id != nil and @model_id.length == 32
                       
-                        result = UI.messagebox "Model has been previously uploaded. Do you want to update the existing model?\n\n'Yes' re-uploads model to Sketchfab (keeps model ID and preserves online edits, e.g. of materials).\n'No' creates new file upload (and a new model ID).", MB_YESNO
+                        result = UI.messagebox "Model has been previously uploaded. Do you want to update the existing model?\n\n'Yes' re-uploads model to Sketchfab (keeps model ID and preserves online edits, e.g. materials).\n'No' creates new file upload (and a new model ID).", MB_YESNO
                         
                         if result == 6  # Yes, re-upload
                         
+                          data['isPublished'] = true  # Don't revert back to draft by default
                           url += '/' + @model_id.to_s 
                           uri = URI.parse(url)
                           req = AS_SketchfabUploader::Multipart_Put.new uri.path, data
@@ -329,14 +331,16 @@ module AS_Extensions
 
                       # Submit via SSL
                       https = Net::HTTP.new(uri.host, uri.port)
-                      https.set_debug_output($stdout)
+                      # https.set_debug_output($stdout)  # Debug only
                       https.use_ssl = true     
                       # Can't properly verify certificate with Sketchfab - OK here
                       https.verify_mode = OpenSSL::SSL::VERIFY_NONE      
 
                       res = https.start { |cnt| cnt.request(req) }
+                      p "Sketchfab response: #{res.code} #{res.msg}"
+                      # p res.body  # Debug only
                       
-                      @success = true if res.code.to_i < 400 
+                      res.code.to_i < 400 ? @success = true : @success = false
 
                       # Free some resources
                       upfile.close
@@ -374,8 +378,10 @@ module AS_Extensions
 
                   else
 
-                      fb = " Error: " + json['error'].to_s if json
-                      UI.messagebox "Sketchfab upload failed." + fb
+                      fb = "Error: \n"
+                      fb += json['error'].to_s + "\n" if json
+                      fb += "#{res.code} #{res.msg}" if res
+                      UI.messagebox "Sketchfab upload failed. " + fb
 
                   end
 
@@ -420,7 +426,7 @@ module AS_Extensions
       
         @model_id = Sketchup.active_model.get_attribute 'sketchfab', 'model_id'
         res = UI.inputbox(['Sketchfab Model ID '], [@model_id], 'Edit Sketchfab Model ID Stored in File')
-        Sketchup.active_model.set_attribute 'sketchfab', 'model_id', res[0]
+        Sketchup.active_model.set_attribute 'sketchfab', 'model_id', res[0] if res
       
       end # set_model_id  
       

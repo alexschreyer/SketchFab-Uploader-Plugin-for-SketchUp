@@ -15,7 +15,7 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 Name :          Sketchfab Uploader
 
 Version:        2.5
-Date :          9/13/2018
+Date :          9/17/2018
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -76,7 +76,7 @@ History:        1.0 (7/13/2012):
                 2.4 (12/12/2016):
                 - Added help menu item
                 - Code cleanup
-                2.5 (9/13/2018)
+                2.5 (9/17/2018)
                 - Some backcomp fixes
                 - Added re-upload functionality
                 - Now stores model data (ID, title etc.) on upload in SKP file
@@ -84,13 +84,13 @@ History:        1.0 (7/13/2012):
                 - Added menu item to edit Model ID
                 - Updated jQuery and 7zip to latest versions
                 - Now uses v3 Sketchfab API
-                - Nor uploads as draft first (unpublished)
+                - Now uploads as draft first (unpublished)
+                - Checks material number for max. (100)
 
 
 Issues/To-do:
                 - Text labels, dimensions, construction-points and -lines, images etc. don't upload (by design)
                 - Uses only model data stored in file, not from Sketchfab (e.g. if edited)
-                - Tag and password re-upload don't edit those online.
                 - For versions before SU 2014: the post_url function does not accept returned data. Only legacy support now.
 
 

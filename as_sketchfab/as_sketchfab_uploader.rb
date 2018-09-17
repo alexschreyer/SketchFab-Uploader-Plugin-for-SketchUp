@@ -158,7 +158,14 @@ module AS_Extensions
 
 
       def self.show_dialog_2014
-      # This uses the Ruby NET StdLibs instead of json
+      # This uses the Ruby StdLibs and the v3 API
+      
+          # Check that we have < 100 materials
+          matnum = Sketchup.active_model.materials.length
+          if matnum >= 100
+              res = UI.messagebox "Your model has #{matnum} materials. Sketchfab only accepts 100 materials. Do you still want to proceed with the upload (some materials may be discarded)?", MB_YESNO
+              return if res == 7
+          end
 
           # Load Net and multipart post libraries for 2014
           require 'uri'

@@ -158,7 +158,7 @@ module AS_Extensions
 
 
       def self.show_dialog_2014
-      # This uses the Ruby StdLibs and the v3 API
+      # This uses the Ruby StdLibs and the v3 API (only newer than 2014)
       
           # Check that we have < 100 materials
           matnum = Sketchup.active_model.materials.length
@@ -166,16 +166,6 @@ module AS_Extensions
               res = UI.messagebox "Your model has #{matnum} materials. Sketchfab only accepts 100 materials. Do you still want to proceed with the upload (some materials may be discarded)?", MB_YESNO
               return if res == 7
           end
-
-          # Load Net and multipart post libraries for 2014
-          require 'uri'
-          require 'net/http'
-          require 'net/https'
-          require 'openssl'
-          require 'multipart-post-as'
-          require 'json'
-          # Can load the new Fileutils here
-          require 'fileutils'
 
           # Allow for only selection upload if something is selected - reset var first
           @options_hash[:selectionset_only] = false
@@ -443,9 +433,22 @@ module AS_Extensions
       def self.show_help
       # Show the website as an About dialog
       
-        dlg = UI::WebDialog.new("#{@exttitle} - Help", true,'AS_SketchfabUploader', 1100, 800, 150, 150, true)
-        dlg.set_url('http://alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/')
-        dlg.show
+        title = @exttitle + ' - Help'
+        url = 'http://alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/'
+
+        if Sketchup.version.to_f < 17 then  # Use old method
+          d = UI::WebDialog.new( title , true ,
+            title.gsub(/\s+/, "_") , 1000 , 600 , 100 , 100 , true);
+          d.navigation_buttons_enabled = false
+          d.set_url( url )
+          d.show      
+        else
+          d = UI::HtmlDialog.new( { :dialog_title => title, :width => 1000, :height => 600,
+            :style => UI::HtmlDialog::STYLE_DIALOG, :preferences_key => title.gsub(/\s+/, "_") } )
+          d.set_url( url )
+          d.show
+          d.center
+        end          
       
       end # show_help     
 

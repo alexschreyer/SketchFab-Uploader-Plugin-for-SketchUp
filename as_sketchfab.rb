@@ -14,8 +14,8 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 
 Name :          Sketchfab Uploader
 
-Version:        2.5
-Date :          9/17/2018
+Version:        2.5.1
+Date :          10/1/2018
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -86,12 +86,14 @@ History:        1.0 (7/13/2012):
                 - Now uses v3 Sketchfab API
                 - Now uploads as draft first (unpublished)
                 - Checks material number for max. (100)
-
+                2.5.1 (10/2/2018)
+                - Drops support for pre-2014 SU (removes global variable problem)
+                - Newer HTML dialog help dialog
+                
 
 Issues/To-do:
                 - Text labels, dimensions, construction-points and -lines, images etc. don't upload (by design)
                 - Uses only model data stored in file, not from Sketchfab (e.g. if edited)
-                - For versions before SU 2014: the post_url function does not accept returned data. Only legacy support now.
 
 
 Credits:
@@ -175,7 +177,7 @@ module AS_Extensions
 
   module AS_SketchfabUploader
   
-    @extversion           = "2.5"
+    @extversion           = "2.5.1"
     @exttitle             = "Sketchfab Uploader"
     @extname              = "as_sketchfab"
     

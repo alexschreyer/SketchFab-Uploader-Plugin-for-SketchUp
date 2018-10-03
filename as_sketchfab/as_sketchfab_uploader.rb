@@ -46,112 +46,17 @@ module AS_Extensions
                         :selectionset_only    => false,
                         :preserve_instancing  => false }
 
-      # Add the library path so Ruby can find it
-      $: << File.dirname(__FILE__)+'/lib'
-
-      # Load libraries for 2013 and 2014
-      require 'zip'
-
-
-      # ========================
-
-
-      def self.show_dialog_2013
-      # This uses a json approach to upload (for < SU 2014)
-
-          # Need to load the old Fileutils here
-          require 'fileutils-186'
-
-          # Allow for only selection upload if something is selected - reset var first
-          @options_hash[:selectionset_only] = false
-          if (Sketchup.active_model.selection.length > 0) then
-              res = UI.messagebox "Upload only selected geometry?", MB_YESNO
-              @options_hash[:selectionset_only] = true if (res == 6)
-          end
-
-          # Export model as DAE
-          if Sketchup.active_model.export @filename, @options_hash then
-
-              # Create ZIP file
-              Zip.create(@zip_name, @filename, @asset_dir)
-
-              # Open file as binary and encode it as Base64
-              contents = open(@zip_name, "rb") {|io| io.read }
-              encdata = [contents].pack('m')
-
-              # Set up and show Webdialog
-              dlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
-              dlg.navigation_buttons_enabled = false
-              dlg.min_width = 450
-              dlg.min_height = 650
-              # dlg.max_width = 450
-              dlg.set_size(450,650)
-
-              # Close dialog callback
-              dlg.add_action_callback('close_me') {|d, p|
-                  d.close
-              }
-           
-              # Callback to prefill page elements (token)
-              dlg.add_action_callback('prefill') {|d, p|
-                  # Need to do this because we need to wait until page has loaded
-                  mytoken = Sketchup.read_default @extname, "api_token", "Paste your token here"
-                  c = "$('#token').val('" + mytoken + "')"
-                  d.execute_script(c)
-              }
-
-              # Callback to send model
-              dlg.add_action_callback('send') {|d, p|
-
-                  # Get data from webdialog and clean it up a bit
-                  description = d.get_element_value("description").gsub(/"/, "'")
-                  mytitle = d.get_element_value("mytitle").gsub(/"/, "'")
-                  tags = d.get_element_value("tags").gsub(/"/, "'")
-                  tags.gsub!(/,*\s+/,' ')
-                  private = d.get_element_value("private").gsub(/"/, "'")
-                  password = d.get_element_value("password").gsub(/"/, "'")
-                  privString = ''
-                  if private == 'True' then
-                      privString = ',"private":"true","password":"' + password + '"'
-                  end
-
-                  # Assemble JSON string
-                  json = '{"contents":"' + encdata.split(/[\r\n]+/).join('\r\n') + '","filename":"model.zip","title":"' + mytitle + '","description":"' + description + '","tags":"' + tags + '","token":"' + p + '","source":"sketchup-exporter"' + privString + '}'
-
-                  # Submit data to Sketchfab - need to use old API with JSON
-                  d.post_url("https://api.sketchfab.com/model", json)
-
-                  begin
-
-                      # Then delete the temporary files
-                      # File.delete @zip_name if File.exists?(@zip_name)
-                      # File.delete @filename if File.exists?(@filename)
-                      AS_SketchfabUploader::FileUtils.rm_f(@zip_name) if File.exists?(@zip_name)
-                      AS_SketchfabUploader::FileUtils.rm_f(@filename) if File.exists?(@filename)
-                      AS_SketchfabUploader::FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)
-
-                  rescue Exception => e
-
-                      UI.messagebox e
-
-                  end
-
-                  Sketchup.write_default @extname, "api_token", p
-                  d.execute_script('submitted()')
-
-              }
-              
-              # Set dialog HTML from external file
-              dlg.set_file(File.join(@extdir,'as_sketchfab_form2013.html'))
-              dlg.show_modal
-
-          else
-
-              UI.messagebox "Couldn't export model as " + @filename
-
-          end # if image converts
-
-      end # show_dialog_2013
+      # Load my libraries
+      require_relative 'lib/zip'
+      require_relative 'lib/multipart-post-as'
+      
+      # Load other libraries
+      require 'uri'
+      require 'net/http'
+      require 'net/https'
+      require 'openssl'
+      require 'json'
+      require 'fileutils'      
 
 
       # ========================
@@ -461,7 +366,7 @@ module AS_Extensions
         sub = UI.menu("File").add_submenu( "Upload to Sketchfab" )
         # Pick based on version
         if Sketchup.version.to_f < 14 then
-          sub.add_item("Upload Model...") { self.show_dialog_2013 }
+          sub.add_item("Upload Model...") { UI.messagebox "This Sketchfab uploader version is not compatible with your version of SketchUp." }
         else
           sub.add_item("Upload Model...") { self.show_dialog_2014 }
         end

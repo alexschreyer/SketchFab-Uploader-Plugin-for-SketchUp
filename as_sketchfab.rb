@@ -1,5 +1,5 @@
 =begin
-Copyright 2012-2018, Alexander C. Schreyer
+Copyright 2012-2020, Alexander C. Schreyer
 All Rights Reserved
 
 THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -14,8 +14,8 @@ Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-f
 
 Name :          Sketchfab Uploader
 
-Version:        2.5.1
-Date :          10/1/2018
+Version:        2.6
+Date :          5/5/2020
 
 Description :   This plugin uploads the currently open model to Sketchfab.com
 
@@ -89,6 +89,10 @@ History:        1.0 (7/13/2012):
                 2.5.1 (10/2/2018)
                 - Drops support for pre-2014 SU (removes global variable problem)
                 - Newer HTML dialog help dialog
+                2.6 (5/5/2020)
+                - UI update to match SU better
+                - Dialog GC fix, uses class var now (2020 compatibility)
+                - Added URL menu item for API token
                 
 
 Issues/To-do:
@@ -177,7 +181,7 @@ module AS_Extensions
 
   module AS_SketchfabUploader
   
-    @extversion           = "2.5.1"
+    @extversion           = "2.6"
     @exttitle             = "Sketchfab Uploader"
     @extname              = "as_sketchfab"
     

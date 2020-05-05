@@ -3,33 +3,37 @@
     <head>
         <title>Post-2014 Sketchfab.com Uploader</title>
         <style type="text/css">
-            * {font-family: Arial, Helvetica, sans-serif; font-size:13px;}
-            body {background-color:#3d3d3d;padding:10px;min-width:220px;}
-            h1, label, p {color:#eee; font-weight: bold;}
-            legend, fieldset {color:#aaaaaa; border-color:#aaaaaa}
-            h1 {font-size:2em;color:orange}
-            a, a:hover, a:visited {color:orange}
-            input, button, textarea {color:#fff; background-color:#666; border:none;}
-            label {display: block; width: 146px;float: left;}
+            * {font-family: "Open Sans", Arial, Helvetica, sans-serif; font-size:13px;}
+            body {background-color:#f3f2f7; padding:10px; min-width:220px;}
+            h1, label, p {color:#363545;}
+            fieldset {color:#363545; background-color:#f9f9fb; padding:10px; border:none;}
+            legend {font-weight:bold; margin:0; padding:5px 0 0 0;}
+            a, a:hover, a:visited {text-decoration:underline; font-size:inherit; color:#4d5259;}
+            a:hover {text-decoration:none;}
+            input, textarea {color:#363545; background-color:#f3f2f7; border:none; border-bottom:1px solid #363545;}
+            input[type=submit], input[type=button] {color:#f9f9fb; background-color:#005f9e; border:none; padding:5px 10px;}
+            input[type=submit]:hover, input[type=button]:hover {background-color:#005187;}
+            label {display:block; width: 146px; float:left;}
+            .textbox {width:calc(100% - 156px); display:block;}
         </style>
         <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
     </head>
     <body>
-        <img src="uploader-logo.png" style="width:100%;" />
+        <img src="uploader-logo.png" style="height:80px;" />
         <p id="text">Upload the open model or your selection to Sketchfab.com. All fields marked with * are mandatory.
         You can get your API token from the <a href='https://sketchfab.com/settings/password' title='Sketchfab API settings' target='_blank'>Sketchfab website</a> after registering there.</p>
         <form id="SketchfabSubmit" name="SketchfabSubmit" action="">
-          <fieldset style="margin-bottom:10px;">
-          <legend>Saved in Model File</legend>
-            <p><label for="mytitle" title="Provide title (required)">Model title *</label><input type="text" id="mytitle" name="mytitle" style="width:200px;" maxlength="48" /></p>
-            <p><label for="description"title="Provide description (optional)">Description</label><textarea name="description" id="description" style="height:3em;width:200px;" maxlength="1024"></textarea></p>
-            <p><label for="tags" title="Provide space-separated tags (optional)">Tags</label><input type="text" id="tags" name="tags" value="sketchup" style="width:200px;" /></p>
+          <fieldset style="margin-bottom:0;">
+          <legend>Saved in Model File:</legend>
+            <p><label for="mytitle" title="Provide title (required)">Model title *</label><input type="text" id="mytitle" name="mytitle" class="textbox" maxlength="48" /></p>
+            <p><label for="description"title="Provide description (optional)">Description</label><textarea name="description" id="description" style="height:3em;" class="textbox" maxlength="1024"></textarea></p>
+            <p><label for="tags" title="Provide space-separated tags (optional)">Tags</label><input type="text" id="tags" name="tags" value="sketchup" class="textbox" /></p>
             <p><label for="private" title="Sketchfab Pro account required to make private (optional)">Make model private?</label><input type="checkbox" name="private" id="private" value="" /> <span style="font-weight:normal;">(PRO account required)</span></p>
-            <p id="pw-field" style="display:none;"><label for="password" title="Set password (optional)">Password</label><input type="text" name="password" id="password" value="" style="width:200px;" maxlength="64" /></p>
+            <p id="pw-field" style="display:none;"><label for="password" title="Set password (optional)">Password</label><input type="text" name="password" id="password" value="" class="textbox" maxlength="64" /></p>
           </fieldset>
           <fieldset>
-          <legend>Saved in SketchUp</legend>
-            <p><label for="token" title="Provide API token from Sketchfab website (required)">Your API token *</label><input type="password" name="token" id="token" value="" placeholder="Paste your token here" style="width:200px;" /></p>
+          <legend>Saved in SketchUp:</legend>
+            <p><label for="token" title="Provide API token from Sketchfab website (required)">Your API token *</label><input type="password" name="token" id="token" value="" placeholder="Paste your token here" class="textbox" /></p>
             <p><label for="options" title="Select upload options">Options:</label>
             <input class="cbox" type="checkbox" name="edges" id="edges" checked="checked" value="true" /> Export edges<br />
             <input class="cbox" type="checkbox" style="margin-left:150px;" name="textures" id="textures" checked="checked" value="true" /> Export textures<br />
@@ -38,10 +42,9 @@
             <input class="cbox" type="checkbox" style="margin-left:150px;" name="materials" id="materials" value="false" /> Use 'color by layer' materials
             </p>
            </fieldset>
-            <p><input type="submit" id="submit" value="Submit Model" style="font-weight:bold;" /></p>
+            <p><input type="submit" id="submit" value="Submit Model" style="font-weight:bold;" />&nbsp;&nbsp;<input type="button" id="cancel" value="Cancel" style="font-weight:bold;" /></p>
         </form>
-        <p><span style="float:left;"><button value="Cancel" id="cancel">Cancel</button></span><span style="float:right;margin-top:10px;">&copy; 2012-2018 by <a href="http://alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/" title="Visit www.alexschreyer.net" target="_blank" style="color:orange">Alex Schreyer</a></span></p>
-        <p></p>
+        <p style="float:right;margin:0;font-size:0.8em;">Extension by <a href="http://alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/" title="Visit www.alexschreyer.net" target="_blank">Alex Schreyer</a></p>
         <script type="text/javascript">
         $(function(){
           $("#SketchfabSubmit").submit(function(event){

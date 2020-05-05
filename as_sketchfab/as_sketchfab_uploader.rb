@@ -80,15 +80,15 @@ module AS_Extensions
           end
 
           # Set up and show Webdialog
-          dlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
-          dlg.navigation_buttons_enabled = false
-          dlg.min_width = 450
-          dlg.min_height = 680
-          # dlg.max_width = 450
-          dlg.set_size(450,680)
+          @udlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
+          @udlg.navigation_buttons_enabled = false
+          @udlg.min_width = 450
+          @udlg.min_height = 700
+          @udlg.max_width = 450
+          @udlg.set_size(450,700)
 
           # Close dialog callback
-          dlg.add_action_callback('close_me') {|d, p|
+          @udlg.add_action_callback('close_me') {|d, p|
 
               d.close
 
@@ -96,7 +96,7 @@ module AS_Extensions
 
 
           # Callback to prefill page elements (token)
-          dlg.add_action_callback('prefill') {|d, p|
+          @udlg.add_action_callback('prefill') {|d, p|
 
               # Prefill all form elements from registry and model here
               # Need to do this as callback because we need to wait until HTML page has loaded
@@ -133,7 +133,7 @@ module AS_Extensions
 
 
           # Callback to prepare and send model
-          dlg.add_action_callback('send') {|d, p|
+          @udlg.add_action_callback('send') {|d, p|
 
               # Get data from webdialog and clean it up a bit
               # Token is p
@@ -313,8 +313,8 @@ module AS_Extensions
 
 
           # Set dialog HTML from external file
-          dlg.set_file(File.join(@extdir,'as_sketchfab_form2014.html'))
-          dlg.show_modal
+          @udlg.set_file(File.join(@extdir,'as_sketchfab_form2014.html'))
+          @udlg.show_modal
 
 
       end # show_dialog_2014
@@ -333,32 +333,53 @@ module AS_Extensions
       end # set_model_id  
       
 
+      # ========================  
+      
+      
+      def self.show_url( title , url )
+      # Show website either as a WebDialog or HtmlDialog
+
+        if Sketchup.version.to_f < 17 then   # Use old dialog
+          @dlg = UI::WebDialog.new( title , true ,
+            title.gsub(/\s+/, "_") , 1000 , 600 , 100 , 100 , true);
+          @dlg.navigation_buttons_enabled = false
+          @dlg.set_url( url )
+          @dlg.show      
+        else   #Use new dialog
+          @dlg = UI::HtmlDialog.new( { :dialog_title => title, :width => 1000, :height => 600,
+            :style => UI::HtmlDialog::STYLE_DIALOG, :preferences_key => title.gsub(/\s+/, "_") } )
+          @dlg.set_url( url )
+          @dlg.show
+          @dlg.center
+        end  
+
+      end  
+      
+      
       # ========================
       
+
       def self.show_help
       # Show the website as an About dialog
-      
-        title = @exttitle + ' - Help'
-        url = 'http://alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/'
 
-        if Sketchup.version.to_f < 17 then  # Use old method
-          d = UI::WebDialog.new( title , true ,
-            title.gsub(/\s+/, "_") , 1000 , 600 , 100 , 100 , true);
-          d.navigation_buttons_enabled = false
-          d.set_url( url )
-          d.show      
-        else
-          d = UI::HtmlDialog.new( { :dialog_title => title, :width => 1000, :height => 600,
-            :style => UI::HtmlDialog::STYLE_DIALOG, :preferences_key => title.gsub(/\s+/, "_") } )
-          d.set_url( url )
-          d.show
-          d.center
-        end          
-      
-      end # show_help     
+        show_url( "#{@exttitle} - Help" , 'https://alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/' )
 
+      end # show_help      
+      
+      
+      # ========================      
+
+
+      def self.show_sketchfab_api
+      # Open the Sketchfab settings page that has the API token
+
+        UI.openURL('https://sketchfab.com/settings/password')
+
+      end # show_sketchfab_api 
+      
 
       # ========================
+      
 
       # Create menu items
       unless file_loaded?(__FILE__)
@@ -371,6 +392,7 @@ module AS_Extensions
           sub.add_item("Upload Model...") { self.show_dialog_2014 }
         end
         sub.add_item("Edit Model ID") { self.set_model_id }
+        sub.add_item("Sketchfab API Settings") { self.show_sketchfab_api }
         sub.add_item("Help") { self.show_help }
 
         file_loaded(__FILE__)

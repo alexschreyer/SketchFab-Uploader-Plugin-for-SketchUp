@@ -79,18 +79,30 @@ module AS_Extensions
               @options_hash[:selectionset_only] = true if (res == 6)
           end
 
-          # Set up and show Webdialog
-          @udlg = UI::WebDialog.new('Sketchfab Uploader', false,'SketchfabUploader', 450, 520, 150, 150, true)
-          @udlg.navigation_buttons_enabled = false
-          @udlg.min_width = 450
-          @udlg.min_height = 700
-          @udlg.max_width = 450
+          # Set up dialog
+          if Sketchup.version.to_f < 100 then   # Use old dialog   TODO: Should be 17, just here for testing!!!
+            @udlg = UI::WebDialog.new( @exttitle , false , @exttitle.gsub(/\s+/, "_") , 450 , 700 , 150 , 150 , true);
+            @udlg.navigation_buttons_enabled = false    
+            @udlg.min_width = 450
+            @udlg.min_height = 450
+          else   #Use new dialog
+            @udlg = UI::HtmlDialog.new( { 
+              :dialog_title => @exttitle,  
+              :min_width => 450,
+              :min_height => 450,
+              :width => 450,
+              :height => 700,
+              :style => UI::HtmlDialog::STYLE_DIALOG, 
+              :preferences_key => @exttitle.gsub(/\s+/, "_") 
+            } )
+            @udlg.center
+          end 
           @udlg.set_size(450,700)
 
           # Close dialog callback
           @udlg.add_action_callback('close_me') {|d, p|
 
-              d.close
+              @udlg.close
 
           }
 
@@ -116,17 +128,17 @@ module AS_Extensions
               password = Sketchup.active_model.get_attribute 'sketchfab', 'model_password', ''      
               
               # Send data to dialog
-              c = "$('#token').val('#{mytoken}');"
-              d.execute_script(c)              
-              c = "$('#edges').prop('checked',#{edg}); $('#materials').prop('checked',#{mat}); $('#textures').prop('checked',#{tex}); $('#faces').prop('checked',#{fac});"
-              d.execute_script(c)
-              c = "$('#edges').val(#{edg}); $('#materials').val(#{mat}); $('#textures').val(#{tex}); $('#faces').val(#{fac});"
-              d.execute_script(c)
-              c = "$('#mytitle').val('#{mytitle}'); $('#description').val('#{description}'); $('#tags').val('#{tags}'); $('#password').val('#{password}');"
-              d.execute_script(c)
+              c = "jQuery('#token').val('#{mytoken}');"
+              @udlg.execute_script(c)              
+              c = "jQuery('#edges').prop('checked',#{edg}); jQuery('#materials').prop('checked',#{mat}); jQuery('#textures').prop('checked',#{tex}); jQuery('#faces').prop('checked',#{fac});"
+              @udlg.execute_script(c)
+              c = "jQuery('#edges').val(#{edg}); jQuery('#materials').val(#{mat}); jQuery('#textures').val(#{tex}); jQuery('#faces').val(#{fac});"
+              @udlg.execute_script(c)
+              c = "jQuery('#mytitle').val('#{mytitle}'); jQuery('#description').val('#{description}'); jQuery('#tags').val('#{tags}'); jQuery('#password').val('#{password}');"
+              @udlg.execute_script(c)
               if private == 'true'
-                c = "$('#private').prop('checked',#{private}); $('#private').val(#{private}); $('#pw-field').toggle();"
-                d.execute_script(c)
+                c = "jQuery('#private').prop('checked',#{private}); jQuery('#private').val(#{private}); jQuery('#pw-field').toggle();"
+                @udlg.execute_script(c)
               end
 
           }
@@ -136,18 +148,19 @@ module AS_Extensions
           @udlg.add_action_callback('send') {|d, p|
 
               # Get data from webdialog and clean it up a bit
-              # Token is p
-              description = d.get_element_value("description").gsub(/"/, "'")
-              mytitle = d.get_element_value("mytitle").gsub(/"/, "'")
-              tags = d.get_element_value("tags").gsub(/"/, "'")
+              # Edit: Token isn't p anymore, rather pull it here
+              p = @udlg.get_element_value("token").gsub(/"/, "'")
+              description = @udlg.get_element_value("description").gsub(/"/, "'")
+              mytitle = @udlg.get_element_value("mytitle").gsub(/"/, "'")
+              tags = @udlg.get_element_value("tags").gsub(/"/, "'")
               tags.gsub!(/,*\s+/,' ')
-              private = d.get_element_value("private").gsub(/"/, "'")
-              password = d.get_element_value("password").gsub(/"/, "'")
-              edg = d.get_element_value("edges").gsub(/"/, "'")
-              mat = d.get_element_value("materials").gsub(/"/, "'")
-              tex = d.get_element_value("textures").gsub(/"/, "'")
-              fac = d.get_element_value("faces").gsub(/"/, "'")
-              # ins = d.get_element_value("instances").gsub(/"/, "'")
+              private = @udlg.get_element_value("private").gsub(/"/, "'")
+              password = @udlg.get_element_value("password").gsub(/"/, "'")
+              edg = @udlg.get_element_value("edges").gsub(/"/, "'")
+              mat = @udlg.get_element_value("materials").gsub(/"/, "'")
+              tex = @udlg.get_element_value("textures").gsub(/"/, "'")
+              fac = @udlg.get_element_value("faces").gsub(/"/, "'")
+              # ins = @udlg.get_element_value("instances").gsub(/"/, "'")
               
               # Write form elements to registry here
               Sketchup.write_default @extname, "api_token", p
@@ -175,7 +188,7 @@ module AS_Extensions
               if Sketchup.active_model.export @filename, @options_hash then
 
                   # Some feedback while we wait
-                  d.execute_script('submitted()')
+                  @udlg.execute_script('submitted()')
 
                   # Wrap in rescue for error display
                   begin
@@ -254,7 +267,7 @@ module AS_Extensions
 
                   end
 
-                  d.close
+                  @udlg.close
 
                   if @success then
                   
@@ -304,7 +317,7 @@ module AS_Extensions
 
               else
 
-                  d.close
+                  @udlg.close
                   UI.messagebox "Couldn't export model as " + @filename
 
               end

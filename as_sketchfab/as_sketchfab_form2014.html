@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>Post-2014 Sketchfab.com Uploader</title>
-        <style type="text/css">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <style>
             * {font-family: "Open Sans", Arial, Helvetica, sans-serif; font-size:13px;}
             body {background-color:#f3f2f7; padding:10px; min-width:220px;}
             h1, label, p {color:#363545;}
@@ -16,17 +17,17 @@
             label {display:block; width: 146px; float:left;}
             .textbox {width:calc(100% - 156px); display:block;}
         </style>
-        <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+        <script src="js/jquery-3.6.0.min.js"></script>
     </head>
     <body>
-        <img src="uploader-logo.png" style="height:80px;" />
+        <img src="uploader-logo.png" alt="Sketchfab uploader logo" style="height:80px;" />
         <p id="text">Upload the open model or your selection to Sketchfab.com. All fields marked with * are mandatory.
         You can get your API token from the <a href='https://sketchfab.com/settings/password' title='Sketchfab API settings' target='_blank'>Sketchfab website</a> after registering there.</p>
-        <form id="SketchfabSubmit" name="SketchfabSubmit" action="">
+        <form id="SketchfabSubmit" name="SketchfabSubmit" onsubmit="return false;">
           <fieldset style="margin-bottom:0;">
           <legend>Saved in Model File:</legend>
             <p><label for="mytitle" title="Provide title (required)">Model title *</label><input type="text" id="mytitle" name="mytitle" class="textbox" maxlength="48" /></p>
-            <p><label for="description"title="Provide description (optional)">Description</label><textarea name="description" id="description" style="height:3em;" class="textbox" maxlength="1024"></textarea></p>
+            <p><label for="description" title="Provide description (optional)">Description</label><textarea name="description" id="description" style="height:3em;" class="textbox" maxlength="1024"></textarea></p>
             <p><label for="tags" title="Provide space-separated tags (optional)">Tags</label><input type="text" id="tags" name="tags" value="sketchup" class="textbox" /></p>
             <p><label for="private" title="Sketchfab Pro account required to make private (optional)">Make model private?</label><input type="checkbox" name="private" id="private" value="" /> <span style="font-weight:normal;">(PRO account required)</span></p>
             <p id="pw-field" style="display:none;"><label for="password" title="Set password (optional)">Password</label><input type="text" name="password" id="password" value="" class="textbox" maxlength="64" /></p>
@@ -34,7 +35,7 @@
           <fieldset>
           <legend>Saved in SketchUp:</legend>
             <p><label for="token" title="Provide API token from Sketchfab website (required)">Your API token *</label><input type="password" name="token" id="token" value="" placeholder="Paste your token here" class="textbox" /></p>
-            <p><label for="options" title="Select upload options">Options:</label>
+            <p><label title="Select upload options">Options:</label>
             <input class="cbox" type="checkbox" name="edges" id="edges" checked="checked" value="true" /> Export edges<br />
             <input class="cbox" type="checkbox" style="margin-left:150px;" name="textures" id="textures" checked="checked" value="true" /> Export textures<br />
             <input class="cbox" type="checkbox" style="margin-left:150px;" name="faces" id="faces" value="false" /> Export two-sided faces<br />
@@ -45,53 +46,55 @@
             <p><input type="submit" id="submit" value="Submit Model" style="font-weight:bold;" />&nbsp;&nbsp;<input type="button" id="cancel" value="Cancel" style="font-weight:bold;" /></p>
         </form>
         <p style="float:right;margin:0;font-size:0.8em;">Extension by <a href="http://alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/" title="Visit www.alexschreyer.net" target="_blank">Alex Schreyer</a></p>
-        <script type="text/javascript">
-        $(function(){
-          $("#SketchfabSubmit").submit(function(event){
+        <script>
+        jQuery(function(){
+          jQuery("#SketchfabSubmit").submit(function(event){
                 event.preventDefault();
         
-                if ($('#mytitle').val().length == 0) {
+                if (jQuery('#mytitle').val().length == 0) {
                     alert('You must fill in a title.');
                     return false;
                 }
         
-                if ($('#token').val().length < 32) {
+                if (jQuery('#token').val().length < 32) {
                     alert('Your token looks like it is too short. Please double-check.');
                     return false;
                 }
         
                 // Submit form and give feedback
-                token = $('#token').val();
-                window.location='skp:send@'+token;
+                // Edit: Don't submit token, rather pull it.
+                // token = jQuery('#token').val();
+                // window.location='skp:send@'+token;
+                window.location='skp:send';
           });
         });
         
-        $('#cancel').click(function(){
+        jQuery('#cancel').click(function(){
             window.location='skp:close_me';
         });
         
-        $('#private').click(function(){
-            if ($(this).val() == 'True') {
-                $(this).val('');
+        jQuery('#private').click(function(){
+            if (jQuery(this).val() == 'True') {
+                jQuery(this).val('');
             } else {
-                $(this).val('True');
+                jQuery(this).val('True');
             };
-            $('#pw-field').toggle();
+            jQuery('#pw-field').toggle();
         });
         
-        $('.cbox').change(function(){
-            $(this).val( $(this).prop('checked') );
+        jQuery('.cbox').change(function(){
+            jQuery(this).val( jQuery(this).prop('checked') );
         });
         
-        $(document).ready(function() {
+        jQuery(document).ready(function() {
             window.location='skp:prefill';
         });
         
         function submitted() {
-            $('h1').html('Processing...');
+            jQuery('h1').html('Processing...');
             scomment = 'Your model has been submitted. Please hang on while we wait for a response from Sketchfab.';
-            $('#text').html(scomment);
-            $('form').html('');
+            jQuery('#text').html(scomment);
+            jQuery('form').html('');
         };
         
     </script>

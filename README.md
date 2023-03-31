@@ -1,4 +1,4 @@
-SketchFab Uploader Plugin for SketchUp
+SketchFab Uploader Extension for SketchUp
 ======================================
 
 Copyright 2012-2023, Alexander C. Schreyer

@@ -1,4 +1,5 @@
 =begin
+
 Copyright 2012-2023, Alexander C. Schreyer
 All Rights Reserved
 
@@ -8,16 +9,16 @@ WHERE APPLICABLE, THIRD-PARTY MATERIALS AND THIRD-PARTY PLATFORMS ARE PROVIDED '
 
 License:        GPL (https://www.gnu.org/licenses/gpl-3.0.html)
 
-Author :        Alexander Schreyer, www.alexschreyer.net, mail@alexschreyer.net
+Author :        Alexander Schreyer, alexschreyer.net
 
-Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/
+Website:        https://www.alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/
 
 Name :          Sketchfab Uploader
 
-Version:        2.7
-Date :          6/14/2021
+Version:        2.8
+Date :          4/10/2023
 
-Description :   This plugin uploads the currently open model to Sketchfab.com
+Description :   This extension uploads the currently open model to Sketchfab.com
 
 Usage :         File menu > Upload to Sketchfab
 
@@ -97,8 +98,9 @@ History:        1.0 (7/13/2012):
                 - Updated jQuery to 3.6.0
                 - Replaced all jQuery $s
                 - Changed token to be pulled rather than submitted
-                2.8 (TBD)
+                2.8 (4/10/2023)
                 - Fix for web dialog issue
+                - Updated license text
                 
 
 Issues/To-do:
@@ -187,7 +189,7 @@ module AS_Extensions
 
   module AS_SketchfabUploader
   
-    @extversion           = "2.7"
+    @extversion           = "2.8"
     @exttitle             = "Sketchfab Uploader"
     @extname              = "as_sketchfab"
     

@@ -1,7 +1,7 @@
 SketchFab Uploader Extension for SketchUp
 ======================================
 
-Copyright 2012-2023, Alexander C. Schreyer
+Copyright 2012-2024, Alexander C. Schreyer
 All Rights Reserved
 
 THIS SOFTWARE IS PROVIDED 'AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR OR ANY COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THIS SOFTWARE OR THE USE OR OTHER DEALINGS IN THIS SOFTWARE.
@@ -12,6 +12,6 @@ License:        GPL (https://www.gnu.org/licenses/gpl-3.0.html)
 
 Author:         Alexander Schreyer, www.alexschreyer.net
 
-Website:        http://www.alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/
+Website:        https://www.alexschreyer.net/projects/sketchfab-uploader-plugin-for-sketchup/
 
-Description :   This plugin uploads the currently open model to Sketchfab.com
+Description:    This extension uploads the currently open model to Sketchfab.com

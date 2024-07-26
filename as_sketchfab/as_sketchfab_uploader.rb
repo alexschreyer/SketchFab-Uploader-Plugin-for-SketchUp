@@ -129,13 +129,17 @@ module AS_Extensions
               
               # Send data to dialog
               c = "jQuery('#token').val('#{mytoken}');"
-              @udlg.execute_script(c)              
+              @udlg.execute_script(c)   
+              
               c = "jQuery('#edges').prop('checked',#{edg}); jQuery('#materials').prop('checked',#{mat}); jQuery('#textures').prop('checked',#{tex}); jQuery('#faces').prop('checked',#{fac});"
               @udlg.execute_script(c)
+              
               c = "jQuery('#edges').val(#{edg}); jQuery('#materials').val(#{mat}); jQuery('#textures').val(#{tex}); jQuery('#faces').val(#{fac});"
               @udlg.execute_script(c)
+              
               c = "jQuery('#mytitle').val('#{mytitle}'); jQuery('#description').val('#{description}'); jQuery('#tags').val('#{tags}'); jQuery('#password').val('#{password}');"
               @udlg.execute_script(c)
+              
               if private == 'true'
                 c = "jQuery('#private').prop('checked',#{private}); jQuery('#private').val(#{private}); jQuery('#pw-field').toggle();"
                 @udlg.execute_script(c)
@@ -283,7 +287,7 @@ module AS_Extensions
                           # Write the model ID to the file as attributes (for later)
                           Sketchup.active_model.set_attribute 'sketchfab', 'model_id', @model_id
                       
-                      rescue
+                      rescue 
                       
                       end
                       
@@ -303,11 +307,11 @@ module AS_Extensions
                   begin
 
                       # Then delete the temporary files
-                      # File.delete @zip_name if File.exists?(@zip_name)
-                      # File.delete @filename if File.exists?(@filename)
-                      FileUtils.rm_f(@zip_name) if File.exists?(@zip_name)
-                      FileUtils.rm_f(@filename) if File.exists?(@filename)
-                      FileUtils.rm_r(@asset_dir) if File.exists?(@asset_dir)
+                      # File.delete @zip_name if File.exist?(@zip_name)
+                      # File.delete @filename if File.exist?(@filename)
+                      FileUtils.rm_f(@zip_name) if File.exist?(@zip_name)
+                      FileUtils.rm_f(@filename) if File.exist?(@filename)
+                      FileUtils.rm_r(@asset_dir) if File.exist?(@asset_dir)
 
                   rescue Exception => e
 

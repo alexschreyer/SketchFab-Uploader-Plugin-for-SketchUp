@@ -1,6 +1,6 @@
 =begin
 
-Copyright 2012-2023, Alexander C. Schreyer
+Copyright 2012-2024, Alexander C. Schreyer
 All Rights Reserved
 
 THIS SOFTWARE IS PROVIDED 'AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR OR ANY COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THIS SOFTWARE OR THE USE OR OTHER DEALINGS IN THIS SOFTWARE.
@@ -15,8 +15,8 @@ Website:        https://www.alexschreyer.net/projects/sketchfab-uploader-plugin-
 
 Name :          Sketchfab Uploader
 
-Version:        2.8
-Date :          4/10/2023
+Version:        2.9
+Date :          7/26/2024
 
 Description :   This extension uploads the currently open model to Sketchfab.com
 
@@ -101,6 +101,9 @@ History:        1.0 (7/13/2012):
                 2.8 (4/10/2023)
                 - Fix for web dialog issue
                 - Updated license text
+                2.9 (7/26/2024)
+                - Fixed File.exist? issue
+                
                 
 
 Issues/To-do:
@@ -189,7 +192,7 @@ module AS_Extensions
 
   module AS_SketchfabUploader
   
-    @extversion           = "2.8"
+    @extversion           = "2.9"
     @exttitle             = "Sketchfab Uploader"
     @extname              = "as_sketchfab"
     
